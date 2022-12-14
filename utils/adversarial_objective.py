@@ -4,7 +4,7 @@ from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import AutoencoderKL, UNet2DConditionModel, PNDMScheduler
 from torchvision import transforms
-from objective import Objective
+from .objective import Objective
 
 class AdversarialsObjective(Objective):
     def __init__(
