@@ -471,4 +471,5 @@ if __name__ == "__main__":
     obj = AdversarialsObjective() 
     x = torch.randn(10, 1*768, dtype=torch.float16) 
     y = obj(x)  # torch.Size([10]) == bsz 
+    
 

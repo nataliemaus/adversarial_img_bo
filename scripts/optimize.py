@@ -59,22 +59,7 @@ def update_surr_model(
     model = model.eval()
     return model
 
-def optimize(args):
-    objective = AdversarialsObjective(
-        n_tokens=args.n_tokens,
-        minimize=args.minimize, 
-        batch_size=args.bsz,
-        use_fixed_latents=args.use_fixed_latents,
-        project_back=args.project_back,
-        avg_over_N_latents=args.avg_over_N_latents,
-        allow_cat_prompts=args.allow_cat_prompts,
-    )
-    args_dict = vars(args)
-    tracker = start_wandb(args_dict)
-    tr = TrustRegionState(dim=objective.dim)
-    assert objective.dim == args.n_tokens*768 
-
-    # random sequence of n_tokens of these is each init prompt 
+def get_init_prompts(args):
     single_token_prompts = ["apple", "road", "ocean", "chair", "hat", "store", "knife", "moon", "red", "music"]
     single_token_prompts = single_token_prompts[0:args.bsz]
     prompts = []
@@ -86,6 +71,9 @@ def optimize(args):
             prompt += random.choice(single_token_prompts)
         # prompt += "<|endoftext|>" 
         prompts.append(prompt)
+    return prompts 
+
+def get_init_data(args, prompts, objective):
     YS = [] 
     XS = [] 
     # if do batches of more than 10, get OOM 
@@ -102,6 +90,40 @@ def optimize(args):
     Y = torch.cat(YS).detach().cpu() 
     X = torch.cat(XS).detach().cpu() 
     Y = Y.unsqueeze(-1)  
+    return X, Y
+
+def save_stuff(args, X, Y, objective, tracker):
+    best_x = X[Y.argmax(), :].squeeze().to(torch.float16)
+    pass_in_x = torch.cat([best_x.unsqueeze(0)]*args.bsz)
+    imgs, xs, y = objective.query_oracle(pass_in_x, return_img=True)
+    best_imgs = imgs[0] 
+    if type(best_imgs) != list:
+        best_imgs = [best_imgs]
+    torch.save(best_x, f"best_xs/{wandb.run.name}-best-x.pt") 
+    for im_ix, img in enumerate(best_imgs):
+        img.save(f"best_xs/{wandb.run.name}_im{im_ix}.png")
+    if objective.project_back: 
+        best_prompt = xs[0] 
+        tracker.log({"best_prompt":best_prompt}) 
+
+def optimize(args):
+    objective = AdversarialsObjective(
+        n_tokens=args.n_tokens,
+        minimize=args.minimize, 
+        batch_size=args.bsz,
+        use_fixed_latents=args.use_fixed_latents,
+        project_back=args.project_back,
+        avg_over_N_latents=args.avg_over_N_latents,
+        allow_cat_prompts=args.allow_cat_prompts,
+    )
+    args_dict = vars(args)
+    tracker = start_wandb(args_dict)
+    tr = TrustRegionState(dim=objective.dim)
+    assert objective.dim == args.n_tokens*768 
+
+    # random sequence of n_tokens of these is each init prompt 
+    prompts = get_init_prompts(args)
+    X, Y = get_init_data(args, prompts, objective)
     model = initialize_global_surrogate_model(X, hidden_dims=args.hidden_dims) 
     model = update_surr_model(
         model=model,
@@ -119,19 +141,7 @@ def optimize(args):
         } )  
         if Y.max().item() > prev_best or args.debug: 
             prev_best = Y.max().item() 
-            best_x = X[Y.argmax(), :].squeeze().to(torch.float16)
-            pass_in_x = torch.cat([best_x.unsqueeze(0)]*args.bsz)
-            imgs, xs, y = objective.query_oracle(pass_in_x, return_img=True)
-            best_imgs = imgs[0] 
-            if type(best_imgs) != list:
-                best_imgs = [best_imgs]
-            torch.save(best_x, f"best_xs/{wandb.run.name}-best-x.pt") 
-            for im_ix, img in enumerate(best_imgs):
-                img.save(f"best_xs/{wandb.run.name}_im{im_ix}.png")
-            if objective.project_back: 
-                best_prompt = xs[0] 
-                tracker.log({"best_prompt":best_prompt}) 
- 
+            save_stuff(args, X, Y, objective, tracker)
         x_next = generate_batch( 
             state=tr,
             model=model,
@@ -188,6 +198,9 @@ if __name__ == "__main__":
     # pip install accelerate 
     # tmux attach -t adv 
 
+    # conda create --name adv_env --file adv_env.txt
+    # conda activate adv_env 
+
     # conda activate lolbo_mols
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 5 --allow_cat_prompts True --avg_over_N_latents 3
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --avg_over_N_latents 3
@@ -201,7 +214,7 @@ if __name__ == "__main__":
     if args.debug:
         args.n_init_pts = 20
         args.init_n_epochs = 2 
-        args.bsz = 2
+        args.bsz = 10
         args.max_n_calls = 100
         args.avg_over_N_latents = 3 
     assert args.n_init_pts % args.bsz == 0
