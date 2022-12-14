@@ -76,10 +76,11 @@ def optimize(args):
 
     # random sequence of n_tokens of these is each init prompt 
     single_token_prompts = ["apple", "road", "ocean", "chair", "hat", "store", "knife", "moon", "red", "music"]
+    single_token_prompts = single_token_prompts[0:args.bsz]
     prompts = []
     for i in range(len(single_token_prompts)):
         prompt = ""
-        for j in range(1):  # args.n_tokens - 2):
+        for j in range(args.n_tokens - 1):
             if j > 0: 
                 prompt += " "
             prompt += random.choice(single_token_prompts)
@@ -200,7 +201,7 @@ if __name__ == "__main__":
     if args.debug:
         args.n_init_pts = 20
         args.init_n_epochs = 2 
-        args.bsz = 10
+        args.bsz = 2
         args.max_n_calls = 100
         args.avg_over_N_latents = 3 
     assert args.n_init_pts % args.bsz == 0
