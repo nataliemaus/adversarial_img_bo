@@ -13,6 +13,7 @@ import wandb
 import math 
 import os 
 os.environ["WANDB_SILENT"] = "true" 
+import random 
 
 def initialize_global_surrogate_model(init_points, hidden_dims):
     likelihood = gpytorch.likelihoods.GaussianLikelihood().cuda() 
@@ -73,7 +74,17 @@ def optimize(args):
     tr = TrustRegionState(dim=objective.dim)
     assert objective.dim == args.n_tokens*768 
 
-    prompts = ["apple", "road", "ocean", "chair", "hat", "store", "knife", "moon", "red", "music"]
+    single_token_prompts = ["apple", "road", "ocean", "chair", "hat", "store", "knife", "moon", "red", "music"]
+    prompts = []
+    for i in range(len(single_token_prompts)):
+        prompt = ""
+        for j in range(args.n_tokens):
+            if j > 0: 
+                prompt += " "
+            prompt += random.choice(single_token_prompts)
+        prompts.append(prompt)
+    import pdb 
+    pdb.set_trace() 
     YS = [] 
     XS = [] 
     # if do batches of more than 10, get OOM 

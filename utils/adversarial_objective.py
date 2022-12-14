@@ -448,10 +448,9 @@ class AdversarialsObjective(Objective):
             # top5 = torch.topk(dists, 5, axis = 0, largest=False)
             # for i in range(5):
             #     print(f"top5: {self.tokenizer.decode(top5.indices[i,:])} with dists {top5.values[i,:].detach().cpu().numpy()}")
-            import pdb 
-            pdb.set_trace() 
             closest_tokens = torch.argmin(dists, axis = 0)
-            closest_tokens = self.all_token_idxs[closest_tokens] # modification for removal of cat-related tokens
+            closest_tokens = torch.tensor([self.all_token_idxs[token] for token in closest_tokens]).to(self.torch_device)
+            # closest_tokens = self.all_token_idxs[closest_tokens] # modification for removal of cat-related tokens
 
             # Cosine Similarity
             # sims = torch.matmul(all_token_embeddings_norm, word_embedding[i,:,:].T)/torch.norm(word_embedding[i,:,:], dim = 1)
