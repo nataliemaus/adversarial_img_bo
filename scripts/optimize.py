@@ -1,0 +1,194 @@
+
+import torch
+import gpytorch
+import sys 
+sys.path.append("../")
+from gpytorch.mlls import PredictiveLogLikelihood 
+from utils.bo_utils.trust_region import TrustRegionState, generate_batch, update_state
+from utils.bo_utils.ppgpr import GPModelDKL 
+from torch.utils.data import TensorDataset, DataLoader
+from utils.adversarial_objective import AdversarialsObjective # best 
+import argparse 
+import wandb 
+import math 
+import os 
+os.environ["WANDB_SILENT"] = "true" 
+
+def initialize_global_surrogate_model(init_points, hidden_dims):
+    likelihood = gpytorch.likelihoods.GaussianLikelihood().cuda() 
+    model = GPModelDKL(
+        init_points.cuda(), 
+        likelihood=likelihood,
+        hidden_dims=hidden_dims,
+    ).cuda()
+    model = model.eval() 
+    model = model.cuda()
+    return model  
+
+def start_wandb(args_dict):
+    tracker = wandb.init(
+        entity=args_dict['wandb_entity'], 
+        project=args_dict['wandb_project_name'],
+        config=args_dict, 
+    ) 
+    print('running', wandb.run.name) 
+    return tracker 
+
+def update_surr_model(
+    model,
+    learning_rte,
+    train_z,
+    train_y,
+    n_epochs
+):
+    model = model.train() 
+    mll = PredictiveLogLikelihood(model.likelihood, model, num_data=train_z.shape[0] )
+    optimizer = torch.optim.Adam([{'params': model.parameters(), 'lr': learning_rte} ], lr=learning_rte)
+    train_bsz = min(len(train_y),128)
+    train_dataset = TensorDataset(train_z.cuda(), train_y.cuda())
+    train_loader = DataLoader(train_dataset, batch_size=train_bsz, shuffle=True)
+    for _ in range(n_epochs):
+        for (inputs, scores) in train_loader:
+            optimizer.zero_grad()
+            output = model(inputs.cuda())
+            loss = -mll(output, scores.cuda()).sum() 
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            optimizer.step()
+    model = model.eval()
+    return model
+
+def optimize(args):
+    objective = AdversarialsObjective(
+        n_tokens=args.n_tokens,
+        minimize=args.minimize, 
+        batch_size=args.bsz,
+        use_fixed_latents=args.use_fixed_latents,
+        project_back=args.project_back,
+        avg_over_N_latents=args.avg_over_N_latents,
+        allow_cat_prompts=args.allow_cat_prompts,
+    )
+    args_dict = vars(args)
+    tracker = start_wandb(args_dict)
+    tr = TrustRegionState(dim=objective.dim)
+    assert objective.dim == args.n_tokens*768 
+
+    prompts = ["apple", "road", "ocean", "chair", "hat", "store", "knife", "moon", "red", "music"]
+    YS = [] 
+    XS = [] 
+    # if do batches of more than 10, get OOM 
+    n_batches = math.ceil(args.n_init_pts / len(prompts)) 
+    for i in range(n_batches): 
+        X = objective.get_init_word_embeddings(prompts) 
+        X = X.detach().cpu()  
+        X = X.reshape(len(prompts), objective.dim ) 
+        if i > 0: 
+            X = X + torch.randn(X.shape)* 0.01 # multiply by 0.01 since  word_embed are typically small 
+        XS.append(X)   
+        print(X.shape) 
+        YS.append(objective(X.to(torch.float16))) 
+    Y = torch.cat(YS).detach().cpu() 
+    X = torch.cat(XS).detach().cpu() 
+    Y = Y.unsqueeze(-1)  
+    model = initialize_global_surrogate_model(X, hidden_dims=args.hidden_dims) 
+    model = update_surr_model(
+        model=model,
+        learning_rte=args.lr,
+        train_z=X,
+        train_y=Y,
+        n_epochs=args.init_n_epochs
+    )
+    prev_best = -1.6 # before about this we don't care to log imgs, etc. s
+    while objective.num_calls < args.max_n_calls:
+        tracker.log({
+            'num_calls':objective.num_calls,
+            'best_y':Y.max(),
+            'best_x':X[Y.argmax(), :].squeeze().tolist(), 
+        } )  
+        if Y.max().item() > prev_best or args.debug: 
+            prev_best = Y.max().item() 
+            best_x = X[Y.argmax(), :].squeeze().to(torch.float16)
+            pass_in_x = torch.cat([best_x.unsqueeze(0)]*args.bsz)
+            imgs, xs, y = objective.query_oracle(pass_in_x, return_img=True)
+            best_imgs = imgs[0] 
+            if type(best_imgs) != list:
+                best_imgs = [best_imgs]
+            torch.save(best_x, f"best_xs/{wandb.run.name}-best-x.pt") 
+            for im_ix, img in enumerate(best_imgs):
+                img.save(f"best_xs/{wandb.run.name}_im{im_ix}.png")
+            if objective.project_back: 
+                best_prompt = xs[0] 
+                tracker.log({"best_prompt":best_prompt}) 
+ 
+        x_next = generate_batch( 
+            state=tr,
+            model=model,
+            X=X,
+            Y=Y,
+            batch_size=args.bsz, 
+            acqf=args.acq_func,
+            absolute_bounds=(objective.lb, objective.ub)
+        ) 
+        y_next = objective(x_next.to(torch.float16) ).unsqueeze(-1)
+        update_state(tr, y_next)
+        Y = torch.cat((Y, y_next.detach().cpu()), dim=-2) 
+        X = torch.cat((X, x_next.detach().cpu()), dim=-2) 
+        model = update_surr_model(
+            model=model,
+            learning_rte=args.lr,
+            train_z=x_next,
+            train_y=y_next, 
+            n_epochs=args.n_epochs
+        )
+    tracker.finish() 
+
+
+def tuple_type(strings):
+    strings = strings.replace("(", "").replace(")", "")
+    mapped_int = map(int, strings.split(","))
+    return tuple(mapped_int)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser() 
+    parser.add_argument('--work_dir', default='/home/nmaus/' ) 
+    parser.add_argument('--wandb_entity', default="nmaus" ) 
+    parser.add_argument('--house_cat_only', type=bool, default=True ) 
+    parser.add_argument('--wandb_project_name', default="adversarial-bo" )  
+    parser.add_argument('--n_init_pts', type=int, default=1100) 
+    parser.add_argument('--max_n_calls', type=int, default=200_000_000_000_000_000_000) 
+    parser.add_argument('--lr', type=float, default=0.01 ) 
+    # parser.add_argument('--seed', type=int, default=0 ) 
+    parser.add_argument('--n_epochs', type=int, default=2)  
+    parser.add_argument('--version', type=int, default=4)  
+    parser.add_argument('--init_n_epochs', type=int, default=80) 
+    parser.add_argument('--bsz', type=int, default=10)  
+    parser.add_argument('--acq_func', type=str, default='ts' ) 
+    parser.add_argument('--debug', type=bool, default=False)  
+    parser.add_argument('--minimize', type=bool, default=True)  
+    parser.add_argument('--use_fixed_latents', type=bool, default=False)  
+    parser.add_argument('--project_back', type=bool, default=True)  
+    # modify... 
+    parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)")
+    parser.add_argument('--allow_cat_prompts', type=bool, default=False)  
+    parser.add_argument('--n_tokens', type=int, default=1 ) 
+    parser.add_argument('--avg_over_N_latents', type=int, default=5) 
+    # pip install diffusers
+    # pip install accelerate 
+    # tmux attach -t adv 
+
+    # conda activate lolbo_mols
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 5 --allow_cat_prompts True --avg_over_N_latents 3
+     
+    args = parser.parse_args() 
+    assert args.minimize 
+    assert args.version == 4
+
+    if args.debug:
+        args.n_init_pts = 20
+        args.init_n_epochs = 2 
+        args.bsz = 10
+        args.max_n_calls = 100
+        args.avg_over_N_latents = 3 
+    assert args.n_init_pts % args.bsz == 0
+    optimize(args)
+
