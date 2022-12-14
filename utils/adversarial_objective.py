@@ -376,16 +376,12 @@ class AdversarialsObjective(Objective):
             ys = [] 
             imgs_per_latent = [] ## N latents x bsz : [ [latent 0, bsz imgs ], [latent 1, bsz imgs], ..., [latent N bsz imgs]]
             for _ in range(self.avg_over_N_latents):
-                try:
-                    out_dict = self.pipeline(
-                        input_type=input_type,
-                        input_value=x, 
-                        output_types=out_types,
-                        fixed_latents=self.fixed_latents
-                    )
-                except:
-                    import pdb 
-                    pdb.set_trace() 
+                out_dict = self.pipeline(
+                    input_type=input_type,
+                    input_value=x, 
+                    output_types=out_types,
+                    fixed_latents=self.fixed_latents
+                )
                 y = out_dict['loss']
                 ys.append(y.unsqueeze(0)) 
                 if return_img:
