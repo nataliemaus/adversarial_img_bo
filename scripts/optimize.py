@@ -132,16 +132,20 @@ def optimize(args):
         train_y=Y,
         n_epochs=args.init_n_epochs
     )
-    prev_best = -1.6 # before about this we don't care to log imgs, etc. s
+    threshold_save_best = -1.6
+    prev_best = threshold_save_best # before about this we don't care to log imgs, etc. s
     while objective.num_calls < args.max_n_calls:
         tracker.log({
             'num_calls':objective.num_calls,
             'best_y':Y.max(),
             'best_x':X[Y.argmax(), :].squeeze().tolist(), 
-        } )  
+        } ) 
         if Y.max().item() > prev_best or args.debug: 
             prev_best = Y.max().item() 
             save_stuff(args, X, Y, objective, tracker)
+        elif prev_best == threshold_save_best and objective.num_calls > 10_000:
+            # if we still don't exceed -1.6 after 10k calls, start recording any progress at all 
+            prev_best = -torch.inf 
         x_next = generate_batch( 
             state=tr,
             model=model,
@@ -204,15 +208,16 @@ if __name__ == "__main__":
     # conda activate adv_env
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 5 --allow_cat_prompts True --avg_over_N_latents 3
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --avg_over_N_latents 3
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 5 --allow_cat_prompts True --avg_over_N_latents 10
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 5 --avg_over_N_latents 10
-     
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --allow_cat_prompts True --avg_over_N_latents 3
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 3 --avg_over_N_latents 3
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 10 --allow_cat_prompts True --avg_over_N_latents 5
+    
     args = parser.parse_args() 
     assert args.minimize 
     assert args.version == 4
 
     if args.debug:
-        args.n_init_pts = 20
+        args.n_init_pts = 10
         args.init_n_epochs = 2 
         args.bsz = 5
         args.max_n_calls = 100
