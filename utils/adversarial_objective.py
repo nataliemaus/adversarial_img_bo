@@ -448,6 +448,8 @@ class AdversarialsObjective(Objective):
             # top5 = torch.topk(dists, 5, axis = 0, largest=False)
             # for i in range(5):
             #     print(f"top5: {self.tokenizer.decode(top5.indices[i,:])} with dists {top5.values[i,:].detach().cpu().numpy()}")
+            import pdb 
+            pdb.set_trace() 
             closest_tokens = torch.argmin(dists, axis = 0)
             closest_tokens = self.all_token_idxs[closest_tokens] # modification for removal of cat-related tokens
 
