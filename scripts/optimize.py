@@ -99,9 +99,9 @@ def save_stuff(args, X, Y, objective, tracker):
     best_imgs = imgs[0] 
     if type(best_imgs) != list:
         best_imgs = [best_imgs]
-    torch.save(best_x, f"best_xs/{wandb.run.name}-best-x.pt") 
+    torch.save(best_x, f"../best_xs/{wandb.run.name}-best-x.pt") 
     for im_ix, img in enumerate(best_imgs):
-        img.save(f"best_xs/{wandb.run.name}_im{im_ix}.png")
+        img.save(f"../best_xs/{wandb.run.name}_im{im_ix}.png")
     if objective.project_back: 
         best_prompt = xs[0] 
         tracker.log({"best_prompt":best_prompt}) 
@@ -196,12 +196,12 @@ if __name__ == "__main__":
     parser.add_argument('--avg_over_N_latents', type=int, default=5) 
     # pip install diffusers
     # pip install accelerate 
+    #  conda activate lolbo_mols
     # tmux attach -t adv 
+    
 
     # conda create --name adv_env --file adv_env.txt
-    # conda activate adv_env 
-
-    # conda activate lolbo_mols
+    # conda activate adv_env
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 5 --allow_cat_prompts True --avg_over_N_latents 3
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --avg_over_N_latents 3
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 5 --allow_cat_prompts True --avg_over_N_latents 10
@@ -214,7 +214,7 @@ if __name__ == "__main__":
     if args.debug:
         args.n_init_pts = 20
         args.init_n_epochs = 2 
-        args.bsz = 10
+        args.bsz = 5
         args.max_n_calls = 100
         args.avg_over_N_latents = 3 
     assert args.n_init_pts % args.bsz == 0
