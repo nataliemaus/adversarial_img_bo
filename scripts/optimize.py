@@ -79,11 +79,11 @@ def optimize(args):
     prompts = []
     for i in range(len(single_token_prompts)):
         prompt = ""
-        for j in range(args.n_tokens - 1):
+        for j in range(args.n_tokens - 2):
             if j > 0: 
                 prompt += " "
             prompt += random.choice(single_token_prompts)
-        prompt += "<|endoftext|>" 
+        # prompt += "<|endoftext|>" 
         prompts.append(prompt)
     YS = [] 
     XS = [] 
