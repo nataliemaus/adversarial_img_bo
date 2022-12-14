@@ -178,6 +178,9 @@ if __name__ == "__main__":
 
     # conda activate lolbo_mols
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 5 --allow_cat_prompts True --avg_over_N_latents 3
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --avg_over_N_latents 3
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 5 --allow_cat_prompts True --avg_over_N_latents 10
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 5 --avg_over_N_latents 10
      
     args = parser.parse_args() 
     assert args.minimize 
