@@ -74,6 +74,7 @@ def optimize(args):
     tr = TrustRegionState(dim=objective.dim)
     assert objective.dim == args.n_tokens*768 
 
+    # random sequence of n_tokens of these is each init prompt 
     single_token_prompts = ["apple", "road", "ocean", "chair", "hat", "store", "knife", "moon", "red", "music"]
     prompts = []
     for i in range(len(single_token_prompts)):
@@ -83,8 +84,6 @@ def optimize(args):
                 prompt += " "
             prompt += random.choice(single_token_prompts)
         prompts.append(prompt)
-    import pdb 
-    pdb.set_trace() 
     YS = [] 
     XS = [] 
     # if do batches of more than 10, get OOM 
