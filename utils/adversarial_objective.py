@@ -98,7 +98,7 @@ class AdversarialsObjective(Objective):
         
         vocab = self.tokenizer.get_vocab()
         if not allow_cat_prompts:
-            cat_related_vocab = ["cat", "cats", "kitten", "kittens", "lion", "tiger", "lynx", "leopard", "panther",
+            cat_related_vocab = ["cat", "cats", "kitten", "kittens", "lion", "tiger", "lynx", "leopard", "panther", "meow",
                         "gato", "gatos", "gata", "gatas", "gatita", "gatitas", "gatito", "gatitos", "leon", "leons",
                         "chat", "chatte", "chats", "chattes", "chaton", "chatons"
                         ]
