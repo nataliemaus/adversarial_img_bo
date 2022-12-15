@@ -98,16 +98,21 @@ class AdversarialsObjective(Objective):
         
         vocab = self.tokenizer.get_vocab()
         if not allow_cat_prompts:
-            cat_related_vocab = ["cat", "cats", "kitten", "kittens", "lion", "tiger", "lynx", "leopard", "panther", "meow",
-                        "gato", "gatos", "gata", "gatas", "gatita", "gatitas", "gatito", "gatitos", "leon", "leons",
-                        "chat", "chatte", "chats", "chattes", "chaton", "chatons"
+            self.cat_related_vocab = ["cat", "cats", "kitten", "kittens", "lion", "tiger", "lynx", "leopard", "panther", "meow", "meows",
+                        "gato", "gatos", "gata", "gatas", "gatita", "gatitas", "gatito", "gatitos", "leon", "leons", "maullar",
+                        "chat", "chatte", "chats", "chattes", "chaton", "chatons", "miaou",
                         ]
+            tmp = []
+            for cat_word in self.cat_related_vocab:
+                tmp.append(cat_word)
+                tmp.append(cat_word+'</w>') 
+            self.cat_related_vocab = tmp 
             # do not allow cat related prompts 
             cat_related_keys = [] # ['cat', 'chat', 'lion', 'tiger', 'panther', 'cats', 'leon']
             cat_related_values = [] 
             non_cat_values = []
             for key in vocab.keys():
-                if key in cat_related_vocab:
+                if key in self.cat_related_vocab:
                     cat_related_keys.append(key)
                     cat_related_values.append(vocab[key])
                 else:
@@ -461,8 +466,10 @@ class AdversarialsObjective(Objective):
             #     print(f"top5: {tokenizer.decode(top5.indices[i,:])} with sims {top5.values[i,:].detach().cpu().numpy()}")
             #     # print(f"top5: {tokenizer.decode(top5.indices)} with dists {top5.values}")
             # closest_tokens = torch.argmin(sims, axis = 0)
+            # self.tokenizer.decode(closest_tokens[2])
             cur_proj_tokens.append(self.tokenizer.decode(closest_tokens))
             proj_tokens.append(cur_proj_tokens)
+            # for token in closest_tokens: print(self.tokenizer.decode(token))
 
         return proj_tokens
 

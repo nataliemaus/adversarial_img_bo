@@ -193,9 +193,10 @@ if __name__ == "__main__":
     parser.add_argument('--minimize', type=bool, default=True)  
     parser.add_argument('--use_fixed_latents', type=bool, default=False)  
     parser.add_argument('--project_back', type=bool, default=True)  
+    parser.add_argument('--allow_cat_prompts', type=bool, default=False)  
+    parser.add_argument('--flag_fixed_cat_word_removal', type=bool, default=True)  
     # modify... 
     parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)")
-    parser.add_argument('--allow_cat_prompts', type=bool, default=False)  
     parser.add_argument('--n_tokens', type=int, default=1 ) 
     parser.add_argument('--avg_over_N_latents', type=int, default=5) 
     # pip install diffusers
@@ -206,11 +207,11 @@ if __name__ == "__main__":
 
     # conda create --name adv_env --file adv_env.txt
     # conda activate adv_env
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 5 --allow_cat_prompts True --avg_over_N_latents 3
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --avg_over_N_latents 3
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --allow_cat_prompts True --avg_over_N_latents 3
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 3 --avg_over_N_latents 3
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 10 --allow_cat_prompts True --avg_over_N_latents 5
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 5 --avg_over_N_latents 5
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --avg_over_N_latents 5
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --avg_over_N_latents 10
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 3 --avg_over_N_latents 10
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 10 --avg_over_N_latents 20
     
     args = parser.parse_args() 
     assert args.minimize 
