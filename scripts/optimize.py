@@ -207,11 +207,11 @@ if __name__ == "__main__":
 
     # conda create --name adv_env --file adv_env.txt
     # conda activate adv_env
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 5 --avg_over_N_latents 5
+    # tmux attach -t adv1 
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 3 --avg_over_N_latents 5
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --avg_over_N_latents 5
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --avg_over_N_latents 10
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 3 --avg_over_N_latents 10
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 10 --avg_over_N_latents 20
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 5 --avg_over_N_latents 10
     
     args = parser.parse_args() 
     assert args.minimize 

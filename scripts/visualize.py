@@ -98,14 +98,40 @@ def visualizev2(args):
 
     # '<|endoftext|>meow<|endoftext|>'
 
+def test_particular_prompt(args):
+    objective = AdversarialsObjective(
+        n_tokens=args.n_tokens,
+        minimize=True, 
+        batch_size=1,
+        use_fixed_latents=False,
+        project_back=True,
+        avg_over_N_latents=args.N_latents,
+        allow_cat_prompts=args.allow_cat_prompts,
+    )
+    prompt = [args.prompt]
+    for i in range(args.N_latents):
+        out_dict = objective.pipeline(
+            input_type="prompt",
+            input_value=prompt, 
+            output_types=["image"],
+            fixed_latents=None,
+        )
+        img = out_dict["image"][0]
+        img.save(f"../test_prompts/{prompt}_{args.n_tokens}tokens_test{i+1}.png")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
     parser.add_argument('--wandb_run_name', default="super-firefly-103" ) 
     parser.add_argument('--n_tokens', type=int, default=5 ) 
     parser.add_argument('--allow_cat_prompts', type=bool, default=False ) 
-    parser.add_argument('--N_latents', type=int, default=10 )   # N imagges
+    parser.add_argument('--N_latents', type=int, default=20 )   # N imagges
+    parser.add_argument('--prompt', default="" )   # N imagges
     args = parser.parse_args() 
-    visualizev2(args) 
+    if args.prompt: #if set prompt
+        test_particular_prompt(args)
+    else:
+        visualizev2(args) 
     # conda activate lolbo_mols
     # ['readkitty urban'] (giddy-moon-70) mostly cats! 
     # ['iz dal<|endoftext|><|endoftext|>siberian'] (rosy-meadow-71) 2/10 cats 
