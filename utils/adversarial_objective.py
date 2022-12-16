@@ -111,7 +111,7 @@ class AdversarialsObjective(Objective):
                 "gato", "gatos", "gata", "gatas", "gatita", "gatitas", "gatito", 
                 "gatitos", "leon", "leons", "maullar",
                 "chat", "chatte", "chats", "chattes", "chaton", "chatons", "miaou",
-            ]
+            ] 
             tmp = []
             for cat_word in self.cat_related_vocab:
                 tmp.append(cat_word)

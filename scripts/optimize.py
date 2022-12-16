@@ -7,7 +7,7 @@ from gpytorch.mlls import PredictiveLogLikelihood
 from utils.bo_utils.trust_region import TrustRegionState, generate_batch, update_state
 from utils.bo_utils.ppgpr import GPModelDKL 
 from torch.utils.data import TensorDataset, DataLoader
-from utils.adversarial_objective import AdversarialsObjective # best 
+from utils.adversarial_objective import AdversarialsObjective  
 import argparse 
 import wandb 
 import math 
@@ -116,25 +116,6 @@ def optimize(args):
         avg_over_N_latents=args.avg_over_N_latents,
         allow_cat_prompts=args.allow_cat_prompts,
     )
-    if False:
-        print("loaded")
-        vocab = objective.tokenizer.get_vocab() 
-        keys = []
-        losses = []
-        for key in vocab.keys():
-            print(key)
-            prompt = [key] 
-            out_dict = objective.pipeline(
-                    input_type="prompt",
-                    input_value=prompt, 
-                    output_types=['loss'],
-                    fixed_latents=None
-                )
-            loss = out_dict['loss']
-            losses.append(loss)
-            keys.append(key)
-        import pdb 
-        pdb.set_trace() 
     
     args_dict = vars(args)
     tracker = start_wandb(args_dict)
@@ -227,12 +208,14 @@ if __name__ == "__main__":
 
     # conda create --name adv_env --file adv_env.txt
     # conda activate adv_env
-    # tmux attach -t adv1 
+    # tmux attach -t adv1 , 2, 3, 4
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 3 --avg_over_N_latents 5
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --avg_over_N_latents 5
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --avg_over_N_latents 10
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 5 --avg_over_N_latents 10
     
+    # tmux attach -t adv10 (node1)
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 4 --avg_over_N_latents 5
     args = parser.parse_args() 
     assert args.minimize 
     assert args.version == 4
