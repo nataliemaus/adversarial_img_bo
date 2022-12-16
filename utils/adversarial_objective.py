@@ -98,10 +98,20 @@ class AdversarialsObjective(Objective):
         
         vocab = self.tokenizer.get_vocab()
         if not allow_cat_prompts:
-            self.cat_related_vocab = ["cat", "cats", "kitten", "kittens", "lion", "tiger", "lynx", "leopard", "panther", "meow", "meows",
-                        "gato", "gatos", "gata", "gatas", "gatita", "gatitas", "gatito", "gatitos", "leon", "leons", "maullar",
-                        "chat", "chatte", "chats", "chattes", "chaton", "chatons", "miaou",
-                        ]
+            self.cat_related_vocab = [
+                "cat", "cats", "kitten", "kittens", "lion", "lions", "tiger", "tigers",
+                "lynx", "leopard", "leopards", "panther", "panthers", "meow", "meows", 
+                "kitty", "coyote", "kittys", "coyotes",
+                "catal", "catals", "wildcat", "wildcats", "catsoftwitter", "caturday",
+                "tabby", "miaw", "kitties", "catday", "feline", "bobcats", "bobcat", "manx",
+                "catsofinstagram", "purr", "purrs", "siamese", "shorthair", "persian", 
+                "ragdoll", "sphynx", "birmin",
+                "abyssinian", "bobtail", "wirehair", "bengal", "burmese", 
+                "chartreux", "cornish", "mau", "egyptian",
+                "gato", "gatos", "gata", "gatas", "gatita", "gatitas", "gatito", 
+                "gatitos", "leon", "leons", "maullar",
+                "chat", "chatte", "chats", "chattes", "chaton", "chatons", "miaou",
+            ]
             tmp = []
             for cat_word in self.cat_related_vocab:
                 tmp.append(cat_word)
@@ -112,7 +122,7 @@ class AdversarialsObjective(Objective):
             cat_related_values = [] 
             non_cat_values = []
             for key in vocab.keys():
-                if key in self.cat_related_vocab:
+                if key in self.cat_related_vocab or ("cat" in key):
                     cat_related_keys.append(key)
                     cat_related_values.append(vocab[key])
                 else:

@@ -116,6 +116,26 @@ def optimize(args):
         avg_over_N_latents=args.avg_over_N_latents,
         allow_cat_prompts=args.allow_cat_prompts,
     )
+    if False:
+        print("loaded")
+        vocab = objective.tokenizer.get_vocab() 
+        keys = []
+        losses = []
+        for key in vocab.keys():
+            print(key)
+            prompt = [key] 
+            out_dict = objective.pipeline(
+                    input_type="prompt",
+                    input_value=prompt, 
+                    output_types=['loss'],
+                    fixed_latents=None
+                )
+            loss = out_dict['loss']
+            losses.append(loss)
+            keys.append(key)
+        import pdb 
+        pdb.set_trace() 
+    
     args_dict = vars(args)
     tracker = start_wandb(args_dict)
     tr = TrustRegionState(dim=objective.dim)
