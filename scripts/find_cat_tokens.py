@@ -18,7 +18,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
     parser.add_argument('--bsz', type=int, default=3)
     parser.add_argument('--save_every', type=int, default=3)
-    parser.add_argument('--save_path', default="single_token_cat_losses.csv")
+    parser.add_argument('--start_ix', type=int, default=0)
+    parser.add_argument('--stop_ix', type=int, default=None) 
     args = parser.parse_args() 
     objective = AdversarialsObjective(
         n_tokens=1,
@@ -30,8 +31,13 @@ if __name__ == "__main__":
         allow_cat_prompts=False,
     )
     vocab = objective.tokenizer.get_vocab() 
-    keys = list(vocab.keys())
-    n_batches = math.ceil(len(keys)/args.bsz)
+    keys = list(vocab.keys()) 
+    keys.sort() # make sure order is always the same!  
+    if args.stop_ix is None:
+        args.stop_ix = len(keys)
+    keys = keys[args.start_ix:args.stop_ix] 
+    save_path = f"single_token_cat_losses_{args.start_ix}_to_{args.stop_ix}.csv" 
+    n_batches = math.ceil(len(keys)/args.bsz) 
     all_losses = [] 
     for i in range(n_batches):
         prompts = keys[i*args.bsz:(i+1)*args.bsz] 
@@ -44,9 +50,15 @@ if __name__ == "__main__":
         losses = out_dict['loss'].tolist() 
         all_losses = all_losses + losses
         if i % args.save_every == 0:
-            save_data(keys, all_losses, args.save_path)
-    save_data(keys, all_losses, args.save_path)
+            save_data(keys, all_losses, save_path)
+    save_data(keys, all_losses, save_path)
     import pdb 
     pdb.set_trace() 
     # pip install pandas 
-    # python3 find_cat_tokens.py --bsz 20 --save_every 100 
+    # CUDA_VISIBLE_DEVICES=2 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 0 --stop_ix 8000
+    # CUDA_VISIBLE_DEVICES=3 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 8000 --stop_ix 16000
+    # CUDA_VISIBLE_DEVICES=4 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 16000 --stop_ix 24000
+    # CUDA_VISIBLE_DEVICES=5 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 24000 --stop_ix 32000
+    # CUDA_VISIBLE_DEVICES=6 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 32000 --stop_ix 40000
+    # CUDA_VISIBLE_DEVICES=7 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 40000 
+
