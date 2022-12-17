@@ -122,13 +122,13 @@ def test_particular_prompt(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
-    parser.add_argument('--wandb_run_name', default="super-firefly-103" ) 
+    parser.add_argument('--wandb_run_name', default="helpful-frost-118" ) 
     parser.add_argument('--n_tokens', type=int, default=5 ) 
     parser.add_argument('--allow_cat_prompts', type=bool, default=False ) 
     parser.add_argument('--N_latents', type=int, default=20 )   # N imagges
     parser.add_argument('--prompt', default="" )   # N imagges
     args = parser.parse_args() 
-    if args.prompt: #if set prompt
+    if args.prompt: #if set prompt 
         test_particular_prompt(args)
     else:
         visualizev2(args) 

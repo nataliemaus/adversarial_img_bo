@@ -5,6 +5,7 @@ from utils.adversarial_objective import AdversarialsObjective
 import math 
 import numpy as np 
 import pandas as pd 
+import glob 
 
 def save_data(keys, all_losses, save_path):
     keys_arr = np.array(keys)
@@ -13,6 +14,36 @@ def save_data(keys, all_losses, save_path):
     df['token'] = keys_arr[0:len(losses_arr)] 
     df[f"cat_loss"] = losses_arr
     df.to_csv(save_path, index=None)
+
+
+def load_data():
+    df = pd.read_csv("../data/all_single_token_cat_losses.csv")
+    tokens = df['token'].values
+    losses = df['cat_loss'].values 
+    return tokens, losses 
+    
+# def load_data():
+#     data_files = glob.glob("single_token_cat_losses_*.csv")
+#     # 49408
+#     all_tokens = []
+#     all_losses = []
+#     dfs = [] 
+#     for file in data_files: dfs.append(pd.read_csv(file))
+#     for df in dfs: all_tokens = all_tokens + df['token'].values.tolist() 
+#     for df in dfs:  all_losses = all_losses + df['cat_loss'].values.tolist() 
+#     save_data(all_tokens, all_losses, "all_single_token_cat_losses.csv")
+
+#     df = pd.read_csv("all_single_token_cat_losses.csv")
+
+#     tokens_arr = np.array(all_tokens)
+#     losses_arr = np.array(all_losses)
+#     all_tokens[losses_arr.argmin()]
+#     ind = np.argsort(losses_arr) # , -4)[-4:]
+#     sorted_tokens = tokens_arr[ind]
+#     sorted_losses = losses_arr[ind]
+#     # u_tokens = np.unique(tokens_arr) # save size :) 
+#     # 49408
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
@@ -61,4 +92,5 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=5 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 24000 --stop_ix 32000
     # CUDA_VISIBLE_DEVICES=6 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 32000 --stop_ix 40000
     # CUDA_VISIBLE_DEVICES=7 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 40000 
+
 

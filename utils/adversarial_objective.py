@@ -5,6 +5,7 @@ from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import AutoencoderKL, UNet2DConditionModel, PNDMScheduler
 from torchvision import transforms
 from .objective import Objective
+import pandas as pd 
 
 class AdversarialsObjective(Objective):
     def __init__(
@@ -98,6 +99,16 @@ class AdversarialsObjective(Objective):
         
         vocab = self.tokenizer.get_vocab()
         if not allow_cat_prompts:
+            cat_related_emojis = [
+                'ðŁĺ¸', # 😸
+                'ðŁĺ»', # 😻
+                "ðŁĺ¹", # 😹 
+                "ðŁĺ»ðŁĺ»", # 😻😻
+                "ðŁĺº", # 😺
+                "ðŁĺ¼", # 😼
+                "ðŁĺ½", # 😽
+                "ðŁĺ¹ðŁĺ¹", # 😹😹
+            ]
             self.cat_related_vocab = [
                 "cat", "cats", "kitten", "kittens", "lion", "lions", "tiger", "tigers",
                 "lynx", "leopard", "leopards", "panther", "panthers", "meow", "meows", 
@@ -105,13 +116,36 @@ class AdversarialsObjective(Objective):
                 "catal", "catals", "wildcat", "wildcats", "catsoftwitter", "caturday",
                 "tabby", "miaw", "kitties", "catday", "feline", "bobcats", "bobcat", "manx",
                 "catsofinstagram", "purr", "purrs", "siamese", "shorthair", "persian", 
-                "ragdoll", "sphynx", "birmin",
+                "ragdoll", "sphynx", "birmin", "furi", "fox", "possum", "foxes", "possums",
                 "abyssinian", "bobtail", "wirehair", "bengal", "burmese", 
-                "chartreux", "cornish", "mau", "egyptian",
+                "chartreux", "cornish", "mau", "egyptian", "calico",
+                "pus", "catar", "chatt", "cate", "chatur", "adri", "raccoon",
                 "gato", "gatos", "gata", "gatas", "gatita", "gatitas", "gatito", 
-                "gatitos", "leon", "leons", "maullar",
+                "catalo", "hm", "ha", "catt", "nya", 
+                "gatitos", "leon", "leons", "maullar", "chatter", "pur", "kot",
                 "chat", "chatte", "chats", "chattes", "chaton", "chatons", "miaou",
-            ] 
+                "roar", "libby", "cub", "figaro", "kats", "kat",
+                "mink", "gwyne", "meo", "bengals", "kati", "pet", "pets",
+                "squirrel", "squirrels",
+            ]
+            self.cat_related_vocab = self.cat_related_vocab + cat_related_emojis
+            if False: 
+                for emoji_text in cat_related_emojis:
+                    try:
+                        emoji = self.tokenizer.decode(vocab[emoji_text])
+                        print(emoji_text, emoji)
+                    except: 
+                        print(emoji_text, "FAIL")
+                        pass 
+                    try:
+                        emoji = self.tokenizer.decode(vocab[emoji_text+'</w>'])
+                        print(emoji_text, emoji)
+                    except: 
+                        print(emoji_text, "FAIL")
+                        pass 
+                import pdb 
+                pdb.set_trace() 
+
             tmp = []
             for cat_word in self.cat_related_vocab:
                 tmp.append(cat_word)
@@ -122,7 +156,8 @@ class AdversarialsObjective(Objective):
             cat_related_values = [] 
             non_cat_values = []
             for key in vocab.keys():
-                if key in self.cat_related_vocab or ("cat" in key):
+                # get rid of all words containg cat or cat emoji as well
+                if key in self.cat_related_vocab or ("cat" in key) or ("ðŁĺ" in key):
                     cat_related_keys.append(key)
                     cat_related_values.append(vocab[key])
                 else:
@@ -135,7 +170,6 @@ class AdversarialsObjective(Objective):
         # torch.Size([49408, 768])
         # torch.Size([49402, 768])
         # self.all_token_embeddings = self.word_embedder(torch.tensor([i for i in range(len(self.tokenizer.get_vocab()))]).to(self.torch_device))
-
 
     def prompt_to_token(self, prompt):
         tokens = self.tokenizer(prompt, padding="max_length", max_length=self.max_num_tokens+2,
@@ -479,7 +513,6 @@ class AdversarialsObjective(Objective):
             # self.tokenizer.decode(closest_tokens[2])
             cur_proj_tokens.append(self.tokenizer.decode(closest_tokens))
             proj_tokens.append(cur_proj_tokens)
-            # for token in closest_tokens: print(self.tokenizer.decode(token))
 
         return proj_tokens
 
