@@ -97,4 +97,14 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=6 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 32000 --stop_ix 40000
     # CUDA_VISIBLE_DEVICES=7 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 40000 
 
+    # gauss node 1
+    # tmux attach -t adv11, adv12, adv13
+    # CUDA_VISIBLE_DEVICES=6 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 0 --stop_ix 12500 --optimal_class car
+    # CUDA_VISIBLE_DEVICES=7 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 12500 --stop_ix 25000 --optimal_class car
+    # CUDA_VISIBLE_DEVICES=8 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 25000 --stop_ix 37500 --optimal_class car
+    # gauss node 2
+    # tmux attach -t adv5
+    # CUDA_VISIBLE_DEVICES=9 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 37500 --optimal_class car
+
+
 
