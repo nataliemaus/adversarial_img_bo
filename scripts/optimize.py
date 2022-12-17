@@ -62,15 +62,18 @@ def update_surr_model(
 def get_init_prompts(args):
     single_token_prompts = ["apple", "road", "ocean", "chair", "hat", "store", "knife", "moon", "red", "music"]
     single_token_prompts = single_token_prompts[0:args.bsz]
+    N = args.n_tokens - 1
+    if args.prepend_to_text:
+        N = args.n_tokens 
     prompts = []
     for i in range(len(single_token_prompts)):
         prompt = ""
-        for j in range(args.n_tokens - 1):
+        for j in range(N):
             if j > 0: 
                 prompt += " "
             prompt += random.choice(single_token_prompts)
-        # prompt += "<|endoftext|>" 
         prompts.append(prompt)
+
     return prompts 
 
 def get_init_data(args, prompts, objective):
@@ -115,6 +118,8 @@ def optimize(args):
         project_back=args.project_back,
         avg_over_N_latents=args.avg_over_N_latents,
         allow_cat_prompts=args.allow_cat_prompts,
+        seed=args.seed,
+        prepend_to_text=args.prepend_to_text,
     )
     
     args_dict = vars(args)
@@ -184,7 +189,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_init_pts', type=int, default=1100) 
     parser.add_argument('--max_n_calls', type=int, default=200_000_000_000_000_000_000) 
     parser.add_argument('--lr', type=float, default=0.01 ) 
-    # parser.add_argument('--seed', type=int, default=0 ) 
+    parser.add_argument('--seed', type=int, default=1 ) 
     parser.add_argument('--n_epochs', type=int, default=2)  
     parser.add_argument('--version', type=int, default=4)  
     parser.add_argument('--init_n_epochs', type=int, default=80) 
@@ -195,11 +200,29 @@ if __name__ == "__main__":
     parser.add_argument('--use_fixed_latents', type=bool, default=False)  
     parser.add_argument('--project_back', type=bool, default=True)  
     parser.add_argument('--allow_cat_prompts', type=bool, default=False)  
-    parser.add_argument('--flag_fixed_cat_word_removal', type=bool, default=True)  
+    parser.add_argument('--flag_fixed_cat_word_removal', type=bool, default=True) 
+    parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)") 
+    parser.add_argument('--prepend_to_text', default="a picture of a dog") 
+    parser.add_argument('--avg_over_N_latents', type=int, default=5)
     # modify... 
-    parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)")
-    parser.add_argument('--n_tokens', type=int, default=1 ) 
-    parser.add_argument('--avg_over_N_latents', type=int, default=5) 
+    parser.add_argument('--prepend_task', type=bool, default=False)
+    parser.add_argument('--n_tokens', type=int, default=3 )  
+    args = parser.parse_args() 
+    if not args.prepend_task: # if default task, prepend_to_text = ""
+        args.prepend_to_text = ""
+    assert args.minimize 
+    assert args.version == 4
+    if args.debug:
+        args.n_init_pts = 10
+        args.init_n_epochs = 2 
+        args.bsz = 5
+        args.max_n_calls = 100
+        args.avg_over_N_latents = 3 
+    assert args.n_init_pts % args.bsz == 0
+    optimize(args)
+
+    # python3 --prepend_task True --n_tokens 3 
+
     # pip install diffusers
     # pip install accelerate 
     #  conda activate lolbo_mols
@@ -213,19 +236,19 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --avg_over_N_latents 5
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --avg_over_N_latents 10
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 5 --avg_over_N_latents 10
-    
     # tmux attach -t adv10 (node1)
     # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 4 --avg_over_N_latents 5
-    args = parser.parse_args() 
-    assert args.minimize 
-    assert args.version == 4
 
-    if args.debug:
-        args.n_init_pts = 10
-        args.init_n_epochs = 2 
-        args.bsz = 5
-        args.max_n_calls = 100
-        args.avg_over_N_latents = 3 
-    assert args.n_init_pts % args.bsz == 0
-    optimize(args)
+    # allegro 
+    # tmux attach -t adv adv2, 3, 4, 5 
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 4 --avg_over_N_latents 10 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 6 --avg_over_N_latents 5 --bsz 20
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 6 --avg_over_N_latents 10 --bsz 20
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 7 --avg_over_N_latents 5 --bsz 20
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 7 --avg_over_N_latents 10 --bsz 20
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 8 --avg_over_N_latents 5 --bsz 20
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 8 --avg_over_N_latents 10 --bsz 20
+
+    # moving xs from desktop to jkgardner: 
+    # rsync -a --ignore-existing best_xs jkgardner.com:/home/nmaus/adversarial_img_bo/
 

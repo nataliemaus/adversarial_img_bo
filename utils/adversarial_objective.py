@@ -18,6 +18,9 @@ class AdversarialsObjective(Objective):
         project_back=True, # project back embedding to closest real tokens
         avg_over_N_latents=8,
         allow_cat_prompts=True,
+        visualize=False,
+        prepend_to_text="",
+        seed=1,
         **kwargs,
     ):
         super().__init__(
@@ -30,6 +33,16 @@ class AdversarialsObjective(Objective):
         ) 
 
         # CONSTANTS
+        # if prepend_to_text is not "", we will prepend the adversairla prompt to the text
+        # ie prepend_to_text = "a picture of a dog"
+        self.prepend_to_text = prepend_to_text 
+        # if self.prepend_to_text:
+        #     self.prepend_to_text = self.prepend_to_text + " <|endoftext|>" 
+        self.N_extra_prepend_tokens = len(self.prepend_to_text.split() )
+
+        if self.prepend_to_text:
+            assert project_back
+        self.visualize = visualize # flag to print individual tokens
         self.allow_cat_prompts = allow_cat_prompts
         self.avg_over_N_latents = avg_over_N_latents # for use when use_fixed_latents==False,
         self.project_back = project_back
@@ -41,8 +54,8 @@ class AdversarialsObjective(Objective):
         self.width = 512                         # default width of Stable Diffusion
         self.num_inference_steps = 25            # Number of denoising steps, this value is decreased to speed up generation
         self.guidance_scale = 7.5                # Scale for classifier-free guidance
-        self.generator = torch.manual_seed(1)   # Seed generator to create the inital latent noise
-        self.max_num_tokens = n_tokens                # maximum number of tokens in input, at most 75 and at least 1
+        self.generator = torch.manual_seed(seed)   # Seed generator to create the inital latent noise
+        self.max_num_tokens = n_tokens + self.N_extra_prepend_tokens # maximum number of tokens in input, at most 75 and at least 1
         self.dtype = torch.float16 
         self.torch_device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -469,6 +482,9 @@ class AdversarialsObjective(Objective):
             input_value=prompts, 
             output_types = ["word_embedding"]
         )["word_embedding"][:,1:-1,:] 
+        if self.N_extra_prepend_tokens > 0:
+            word_embeddings = word_embeddings[:, 0:-self.N_extra_prepend_tokens, :]
+
         return word_embeddings
         # outputs = self.pipeline(input_type = "word_embedding",
         #                 input_value = word_embeddings,
@@ -489,30 +505,26 @@ class AdversarialsObjective(Objective):
         proj_tokens = []
         # Iterate through batch_size
         for i in range(word_embedding.shape[0]):
-            cur_proj_tokens = []
             # Euclidean Norm
             dists =  torch.norm(self.all_token_embeddings.unsqueeze(1) - word_embedding[i,:,:], dim = 2)
-
-            # print(f"max dist: {torch.max(dists,axis=0).values.detach().cpu().numpy()} cat dist: {dists[2368,:].detach().cpu().numpy()}")
-            # top5 = torch.topk(dists, 5, axis = 0, largest=False)
-            # for i in range(5):
-            #     print(f"top5: {self.tokenizer.decode(top5.indices[i,:])} with dists {top5.values[i,:].detach().cpu().numpy()}")
             closest_tokens = torch.argmin(dists, axis = 0)
             closest_tokens = torch.tensor([self.all_token_idxs[token] for token in closest_tokens]).to(self.torch_device)
-            # closest_tokens = self.all_token_idxs[closest_tokens] # modification for removal of cat-related tokens
-
-            # Cosine Similarity
-            # sims = torch.matmul(all_token_embeddings_norm, word_embedding[i,:,:].T)/torch.norm(word_embedding[i,:,:], dim = 1)
-
-            # print(f"max sim: {torch.max(sims,axis=0).values.detach().cpu().numpy()} cat sim: {sims[2368,:].detach().cpu().numpy()}")
-            # top5 = torch.topk(sims, 5, axis = 0, largest=True)
-            # for i in range(5):
-            #     print(f"top5: {tokenizer.decode(top5.indices[i,:])} with sims {top5.values[i,:].detach().cpu().numpy()}")
-            #     # print(f"top5: {tokenizer.decode(top5.indices)} with dists {top5.values}")
-            # closest_tokens = torch.argmin(sims, axis = 0)
-            # self.tokenizer.decode(closest_tokens[2])
-            cur_proj_tokens.append(self.tokenizer.decode(closest_tokens))
-            proj_tokens.append(cur_proj_tokens)
+            closest_vocab = self.tokenizer.decode(closest_tokens)
+            if self.prepend_to_text: 
+                closest_vocab = closest_vocab + " " + self.prepend_to_text + " <|endoftext|>" 
+            cur_proj_tokens = [closest_vocab]
+            proj_tokens.append(cur_proj_tokens) 
+            if self.visualize: # visualizing 
+                tokenized = ""
+                for ix, token in enumerate(closest_tokens):
+                    if ix > 0:
+                        tokenized += ","
+                    word = self.tokenizer.decode(token)
+                    tokenized += word 
+                    print(f"token{ix + 1}:", word)
+                print("TOKENIZED:", tokenized)
+                import pdb 
+                pdb.set_trace() 
 
         return proj_tokens
 
