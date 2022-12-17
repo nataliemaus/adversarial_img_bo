@@ -117,7 +117,7 @@ def optimize(args):
         use_fixed_latents=args.use_fixed_latents,
         project_back=args.project_back,
         avg_over_N_latents=args.avg_over_N_latents,
-        allow_cat_prompts=args.allow_cat_prompts,
+        allow_related_prompts=args.allow_related_prompts,
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
     )
@@ -183,31 +183,31 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
     parser.add_argument('--work_dir', default='/home/nmaus/' ) 
     parser.add_argument('--wandb_entity', default="nmaus" ) 
-    parser.add_argument('--house_cat_only', type=bool, default=True ) 
     parser.add_argument('--wandb_project_name', default="adversarial-bo" )  
     parser.add_argument('--n_init_pts', type=int, default=1100) 
     parser.add_argument('--max_n_calls', type=int, default=200_000_000_000_000_000_000) 
     parser.add_argument('--lr', type=float, default=0.01 ) 
-    parser.add_argument('--seed', type=int, default=1 ) 
     parser.add_argument('--n_epochs', type=int, default=2)  
     parser.add_argument('--version', type=int, default=4)  
     parser.add_argument('--init_n_epochs', type=int, default=80) 
-    parser.add_argument('--bsz', type=int, default=10)  
     parser.add_argument('--acq_func', type=str, default='ts' ) 
     parser.add_argument('--debug', type=bool, default=False)  
     parser.add_argument('--minimize', type=bool, default=True)  
     parser.add_argument('--use_fixed_latents', type=bool, default=False)  
     parser.add_argument('--project_back', type=bool, default=True)  
-    parser.add_argument('--allow_cat_prompts', type=bool, default=False)  
-    parser.add_argument('--flag_fixed_cat_word_removal', type=bool, default=True) 
+    parser.add_argument('--allow_related_prompts', type=bool, default=False)  
     parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)") 
-    parser.add_argument('--prepend_to_text', default="a picture of a dog") 
     parser.add_argument('--avg_over_N_latents', type=int, default=5)
     parser.add_argument('--threshold_save_best', type=int, default=-4)
-    # modify... 
+    ## modify... 
+    parser.add_argument('--seed', type=int, default=1 ) 
+    parser.add_argument('--bsz', type=int, default=10)  
     parser.add_argument('--prepend_task', type=bool, default=False)
+    parser.add_argument('--prepend_to_text', default="a picture of a dog") 
     parser.add_argument('--n_tokens', type=int, default=3 )  
+    parser.add_argument('--optimal_class', default="cat" )  
     args = parser.parse_args() 
+    assert args.optimal_class in ["cat", "car"] 
     if not args.prepend_task: # if default task, prepend_to_text = ""
         args.prepend_to_text = ""
     assert args.minimize 
@@ -227,28 +227,26 @@ if __name__ == "__main__":
     # pip install accelerate 
     #  conda activate lolbo_mols
     # tmux attach -t adv 
-    
 
     # conda create --name adv_env --file adv_env.txt
     # conda activate adv_env
-    # tmux attach -t adv1 , 2, 3, 4
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 3 --avg_over_N_latents 5
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --avg_over_N_latents 5
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --avg_over_N_latents 10
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 5 --avg_over_N_latents 10
+    # tmux attach -t adv1 , adv2, adv3, adv4
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 3 --prepend_task True
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --prepend_task True
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 6 --prepend_task True
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 7 --prepend_task True
     # tmux attach -t adv10 (node1)
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 4 --avg_over_N_latents 5
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 4 --prepend_task True
 
-    # allegro 
-    # tmux attach -t adv adv2, 3, 4, 5 
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 4 --avg_over_N_latents 10 
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 6 --avg_over_N_latents 5 --bsz 20
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 6 --avg_over_N_latents 10 --bsz 20
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 7 --avg_over_N_latents 5 --bsz 20
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 7 --avg_over_N_latents 10 --bsz 20
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 8 --avg_over_N_latents 5 --bsz 20
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 8 --avg_over_N_latents 10 --bsz 20
+    # Allegro 
+    # tmux attach -t adv adv2, adv3, adv4, adv5, adv6, adv7 
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 8 --prepend_task True --bsz 20
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 9 --prepend_task True --bsz 20
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 10 --prepend_task True --bsz 20
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 6 --prepend_task True --bsz 20 --seed 3
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 8 --prepend_task True --bsz 20 --seed 3
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 11 --prepend_task True --bsz 20
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 12 --prepend_task True --bsz 20
 
     # moving xs from desktop to jkgardner: 
     # rsync -a --ignore-existing best_xs jkgardner.com:/home/nmaus/adversarial_img_bo/
-

@@ -12,14 +12,15 @@ class AdversarialsObjective(Objective):
         self,
         num_calls=0,
         n_tokens=1,
-        minimize=False,
+        minimize=True,
         batch_size=10,
         use_fixed_latents=False,
         project_back=True, # project back embedding to closest real tokens
         avg_over_N_latents=8,
-        allow_cat_prompts=True,
+        allow_related_prompts=True,
         visualize=False,
         prepend_to_text="",
+        optimal_class="cat",
         seed=1,
         **kwargs,
     ):
@@ -40,10 +41,11 @@ class AdversarialsObjective(Objective):
         #     self.prepend_to_text = self.prepend_to_text + " <|endoftext|>" 
         self.N_extra_prepend_tokens = len(self.prepend_to_text.split() )
 
+        assert optimal_class in ["cat", "tricycle", "pan", "car"]
+        self.optimal_class = optimal_class
         if self.prepend_to_text:
             assert project_back
         self.visualize = visualize # flag to print individual tokens
-        self.allow_cat_prompts = allow_cat_prompts
         self.avg_over_N_latents = avg_over_N_latents # for use when use_fixed_latents==False,
         self.project_back = project_back
         self.token = "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" 
@@ -111,8 +113,31 @@ class AdversarialsObjective(Objective):
             self.fixed_latents = None 
         
         vocab = self.tokenizer.get_vocab()
-        if not allow_cat_prompts:
-            cat_related_emojis = [
+        if not allow_related_prompts:
+            related_vocab = self.get_related_vocab() 
+            # do not allow cat related prompts 
+            related_keys = [] 
+            related_values = [] 
+            non_related_values = []
+            for key in vocab.keys():
+                # get rid of all words containg the optimal word as well
+                if key in related_vocab or (self.optimal_class in key):
+                    related_keys.append(key)
+                    related_values.append(vocab[key])
+                else:
+                    non_related_values.append(vocab[key])
+            self.all_token_idxs = non_related_values
+        else:
+            self.all_token_idxs = list(vocab.values())
+
+        self.all_token_embeddings = self.word_embedder(torch.tensor(self.all_token_idxs).to(self.torch_device)) 
+        # torch.Size([49408, 768])
+        # torch.Size([49402, 768])
+        # self.all_token_embeddings = self.word_embedder(torch.tensor([i for i in range(len(self.tokenizer.get_vocab()))]).to(self.torch_device))
+
+    def get_related_vocab(self,):
+        if self.optimal_class == "cat":
+            related_emojis = [
                 'ðŁĺ¸', # 😸
                 'ðŁĺ»', # 😻
                 "ðŁĺ¹", # 😹 
@@ -122,7 +147,7 @@ class AdversarialsObjective(Objective):
                 "ðŁĺ½", # 😽
                 "ðŁĺ¹ðŁĺ¹", # 😹😹
             ]
-            self.cat_related_vocab = [
+            related_vocab = [
                 "cat", "cats", "kitten", "kittens", "lion", "lions", "tiger", "tigers",
                 "lynx", "leopard", "leopards", "panther", "panthers", "meow", "meows", 
                 "kitty", "coyote", "kittys", "coyotes",
@@ -141,48 +166,45 @@ class AdversarialsObjective(Objective):
                 "mink", "gwyne", "meo", "bengals", "kati", "pet", "pets",
                 "squirrel", "squirrels",
             ]
-            self.cat_related_vocab = self.cat_related_vocab + cat_related_emojis
-            if False: 
-                for emoji_text in cat_related_emojis:
-                    try:
-                        emoji = self.tokenizer.decode(vocab[emoji_text])
-                        print(emoji_text, emoji)
-                    except: 
-                        print(emoji_text, "FAIL")
-                        pass 
-                    try:
-                        emoji = self.tokenizer.decode(vocab[emoji_text+'</w>'])
-                        print(emoji_text, emoji)
-                    except: 
-                        print(emoji_text, "FAIL")
-                        pass 
-                import pdb 
-                pdb.set_trace() 
+        elif self.optimal_class == "tricycle":
+            related_emojis = [] 
+            related_vocab = ["tricycle", "bike", "bicycle", "unicycle", "cycle", "three", "wheel"]
+        elif self.optimal_class == "pan":
+            related_emojis = [] 
+            related_vocab = ["pan", "pot", "cook", "frying", "hot", "stove", "stove-top"]
+        elif self.optimal_class == "car":
+            related_emojis = [] 
+            related_vocab = [
+                "car", "vehicle", "jeep", "automobile",
+                "ford", "truck", "motor", "motorcycle", 
+                "drive", "fast", "wheel", "sport",
+                "sports", "shift", "gear", "race",
+                "track", "hotwheels",
+            ]
+        related_vocab = related_vocab + related_emojis
+        if False: 
+            for emoji_text in cat_related_emojis:
+                try:
+                    emoji = self.tokenizer.decode(vocab[emoji_text])
+                    print(emoji_text, emoji)
+                except: 
+                    print(emoji_text, "FAIL")
+                    pass 
+                try:
+                    emoji = self.tokenizer.decode(vocab[emoji_text+'</w>'])
+                    print(emoji_text, emoji)
+                except: 
+                    print(emoji_text, "FAIL")
+                    pass 
+            import pdb 
+            pdb.set_trace() 
 
-            tmp = []
-            for cat_word in self.cat_related_vocab:
-                tmp.append(cat_word)
-                tmp.append(cat_word+'</w>') 
-            self.cat_related_vocab = tmp 
-            # do not allow cat related prompts 
-            cat_related_keys = [] # ['cat', 'chat', 'lion', 'tiger', 'panther', 'cats', 'leon']
-            cat_related_values = [] 
-            non_cat_values = []
-            for key in vocab.keys():
-                # get rid of all words containg cat or cat emoji as well
-                if key in self.cat_related_vocab or ("cat" in key) or ("ðŁĺ" in key):
-                    cat_related_keys.append(key)
-                    cat_related_values.append(vocab[key])
-                else:
-                    non_cat_values.append(vocab[key])
-            self.all_token_idxs = non_cat_values
-        else:
-            self.all_token_idxs = list(vocab.values())
-
-        self.all_token_embeddings = self.word_embedder(torch.tensor(self.all_token_idxs).to(self.torch_device)) 
-        # torch.Size([49408, 768])
-        # torch.Size([49402, 768])
-        # self.all_token_embeddings = self.word_embedder(torch.tensor([i for i in range(len(self.tokenizer.get_vocab()))]).to(self.torch_device))
+        tmp = []
+        for word in related_vocab:
+            tmp.append(word)
+            tmp.append(word+'</w>') 
+        related_vocab = tmp 
+        return related_vocab 
 
     def prompt_to_token(self, prompt):
         tokens = self.tokenizer(prompt, padding="max_length", max_length=self.max_num_tokens+2,
@@ -344,11 +366,27 @@ class AdversarialsObjective(Objective):
             output = self.resnet18(input_batch)
         # The output has unnormalized scores. To get probabilities, you can run a softmax on it.
         probabilities = torch.nn.functional.softmax(output, dim=1)
-        total_cat_probs = torch.max(probabilities[:,281:282], dim = 1).values # classes 281:282 are HOUSE cat classes
+        if self.optimal_class == "cat":
+            class_ix0 = 281
+            class_ix1 = 282
+        elif self.optimal_class == "tricycle":
+            class_ix0 = 870
+            class_ix1 = 871
+        elif self.optimal_class == "pan":
+            class_ix0 = 567
+            class_ix1 = 568
+        elif self.optimal_class == "car": 
+            # 705, 706 = passenger car (but could be train passenger car too... idk, stick w/ sports car!)
+            # 817, 818 = sports car !!! 
+            class_ix0 = 817
+            class_ix1 = 818 
+        else:
+            assert 0 
+        total_probs = torch.max(probabilities[:,class_ix0:class_ix1], dim = 1).values # classes 281:282 are HOUSE cat classes
         # total_cat_probs = torch.max(probabilities[:,281:286], dim = 1).values # classes 281:286 are cat classes
         #total_dog_probs = torch.sum(probabilities[:,151:268], dim = 1) # classes 151:268 are dog classes
         #p_dog = total_dog_probs / (total_cat_probs + total_dog_probs)
-        loss = - torch.log(total_cat_probs)
+        loss = - torch.log(total_probs)
         return loss
 
 

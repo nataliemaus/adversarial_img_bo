@@ -12,7 +12,7 @@ def save_data(keys, all_losses, save_path):
     losses_arr = np.array(all_losses)
     df = pd.DataFrame() 
     df['token'] = keys_arr[0:len(losses_arr)] 
-    df[f"cat_loss"] = losses_arr
+    df["loss"] = losses_arr
     df.to_csv(save_path, index=None)
 
 
@@ -21,7 +21,7 @@ def load_data():
     tokens = df['token'].values
     losses = df['cat_loss'].values 
     return tokens, losses 
-    
+
 # def load_data():
 #     data_files = glob.glob("single_token_cat_losses_*.csv")
 #     # 49408
@@ -48,6 +48,7 @@ def load_data():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
     parser.add_argument('--bsz', type=int, default=3)
+    parser.add_argument('--optimal_class', default="cat")
     parser.add_argument('--save_every', type=int, default=3)
     parser.add_argument('--start_ix', type=int, default=0)
     parser.add_argument('--stop_ix', type=int, default=None) 
@@ -56,10 +57,13 @@ if __name__ == "__main__":
         n_tokens=1,
         minimize=True, 
         batch_size=args.bsz,
-        use_fixed_latents=False,
-        project_back=True,
+        use_fixed_latents=True,
+        project_back=False,
         avg_over_N_latents=2,
-        allow_cat_prompts=False,
+        allow_related_prompts=True,
+        visualize=False,
+        prepend_to_text="",
+        optimal_class=args.optimal_class,
     )
     vocab = objective.tokenizer.get_vocab() 
     keys = list(vocab.keys()) 
@@ -67,17 +71,17 @@ if __name__ == "__main__":
     if args.stop_ix is None:
         args.stop_ix = len(keys)
     keys = keys[args.start_ix:args.stop_ix] 
-    save_path = f"single_token_cat_losses_{args.start_ix}_to_{args.stop_ix}.csv" 
+    save_path = f"single_token_{args.optimal_class}_losses_{args.start_ix}_to_{args.stop_ix}.csv" 
     n_batches = math.ceil(len(keys)/args.bsz) 
     all_losses = [] 
     for i in range(n_batches):
         prompts = keys[i*args.bsz:(i+1)*args.bsz] 
         out_dict = objective.pipeline(
-                input_type="prompt",
-                input_value=prompts, 
-                output_types=['loss'],
-                fixed_latents=None
-            )
+            input_type="prompt",
+            input_value=prompts, 
+            output_types=['loss'],
+            fixed_latents=objective.fixed_latents,
+        )
         losses = out_dict['loss'].tolist() 
         all_losses = all_losses + losses
         if i % args.save_every == 0:
@@ -86,7 +90,7 @@ if __name__ == "__main__":
     import pdb 
     pdb.set_trace() 
     # pip install pandas 
-    # CUDA_VISIBLE_DEVICES=2 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 0 --stop_ix 8000
+    # CUDA_VISIBLE_DEVICES=0 python3 find_cat_tokens.py --bsz 2 --save_every 2 --start_ix 0 --stop_ix 8 --optimal_class tricycle
     # CUDA_VISIBLE_DEVICES=3 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 8000 --stop_ix 16000
     # CUDA_VISIBLE_DEVICES=4 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 16000 --stop_ix 24000
     # CUDA_VISIBLE_DEVICES=5 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 24000 --stop_ix 32000
