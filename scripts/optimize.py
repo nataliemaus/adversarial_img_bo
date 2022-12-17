@@ -138,8 +138,7 @@ def optimize(args):
         train_y=Y,
         n_epochs=args.init_n_epochs
     )
-    threshold_save_best = -1.6
-    prev_best = threshold_save_best # before about this we don't care to log imgs, etc. s
+    prev_best = args.threshold_save_best # before about this we don't care to log imgs, etc. s
     while objective.num_calls < args.max_n_calls:
         tracker.log({
             'num_calls':objective.num_calls,
@@ -149,7 +148,7 @@ def optimize(args):
         if Y.max().item() > prev_best or args.debug: 
             prev_best = Y.max().item() 
             save_stuff(args, X, Y, objective, tracker)
-        elif prev_best == threshold_save_best and objective.num_calls > 10_000:
+        elif (prev_best == args.threshold_save_best) and (objective.num_calls > 3_000):
             # if we still don't exceed -1.6 after 10k calls, start recording any progress at all 
             prev_best = -torch.inf 
         x_next = generate_batch( 
@@ -204,6 +203,7 @@ if __name__ == "__main__":
     parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)") 
     parser.add_argument('--prepend_to_text', default="a picture of a dog") 
     parser.add_argument('--avg_over_N_latents', type=int, default=5)
+    parser.add_argument('--threshold_save_best', type=int, default=-4)
     # modify... 
     parser.add_argument('--prepend_task', type=bool, default=False)
     parser.add_argument('--n_tokens', type=int, default=3 )  
