@@ -164,7 +164,7 @@ class AdversarialsObjective(Objective):
                 "chat", "chatte", "chats", "chattes", "chaton", "chatons", "miaou",
                 "roar", "libby", "cub", "figaro", "kats", "kat",
                 "mink", "gwyne", "meo", "bengals", "kati", "pet", "pets",
-                "squirrel", "squirrels",
+                "squirrel", "squirrels", "cougar", "cougars",
             ]
         elif self.optimal_class == "tricycle":
             related_emojis = [] 
