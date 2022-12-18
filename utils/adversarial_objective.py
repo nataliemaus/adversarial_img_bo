@@ -6,6 +6,7 @@ from diffusers import AutoencoderKL, UNet2DConditionModel, PNDMScheduler
 from torchvision import transforms
 from .objective import Objective
 import pandas as pd 
+import numpy as np
 
 class AdversarialsObjective(Objective):
     def __init__(
@@ -146,6 +147,8 @@ class AdversarialsObjective(Objective):
                 "ðŁĺ¼", # 😼
                 "ðŁĺ½", # 😽
                 "ðŁĺ¹ðŁĺ¹", # 😹😹
+                "ðŁĲ±", # 🐱
+                "ðŁĲķ", # 🐕
             ]
             related_vocab = [
                 "cat", "cats", "kitten", "kittens", "lion", "lions", "tiger", "tigers",
@@ -173,32 +176,92 @@ class AdversarialsObjective(Objective):
             related_emojis = [] 
             related_vocab = ["pan", "pot", "cook", "frying", "hot", "stove", "stove-top"]
         elif self.optimal_class == "car":
-            related_emojis = [] 
+            related_emojis = [
+                "ðŁļĹ", # 🚗
+                "ðŁļĺ", # 🚘
+                "ðŁļĻ", # 🚙
+            ]
             related_vocab = [
-                "car", "vehicle", "jeep", "automobile",
-                "ford", "truck", "motor", "motorcycle", 
-                "drive", "fast", "wheel", "sport",
-                "sports", "shift", "gear", "race",
-                "track", "hotwheels",
+                "car", "cars", "vehicle", "vehicles",
+                "jeep", "jeeps", "automobile", "automobiles",
+                "ford", "truck", "trucks", "motor", "motorcycle", 
+                "motorcycles", "motors", "drive", "drives",
+                "fast", "wheel", "sport", "wheels",
+                "sports", "shift", "shifts", "gear",
+                "gears", "race", "races", "hotwheels",
+                "bmw", "suv", "suvs", "crossover", 
+                "convertible", "convertibles",
+                "sedan", "coupe", "van", "minivan", 
+                "honda", "civic", "altima", "corolla",
+                "accord", "pickup", "camry", "toyota",
+                "nissan", "chevrolet", "chevy", "silverado", 
+                "malibu", "hot", "rod", "limo", "limousine", 
+                "hatchback", "ute", "tourer", "brake", 
+                "rider", "electric", "gas", "hatch", 
+                "spyder", "wagon", "mpv", "mercedes", 
+                "mercedes-benz", "mercedesbenz",
+                "porsche", "subaru", "cadillac", 
+                "volkswagen", "lexus", "audi", 
+                "ferrari", "volvo", "jaguar", "gmc",
+                "buick", "acura", "bentley", "dodge",
+                "hyundai", "lincoln", "mazda", "landrover",
+                "rover", "tesla", "ram", "kia", "chrysler",
+                "pontiac", "infiniti", "mitsubishi", 
+                "oldsmobile", "mobile", "maserati", 
+                "astonmartin", "aston", "bugatti", "fiat",
+                "mini", "alfaromeo", "alfa", "saab", "genesis",
+                "suzuki", "studebarker", "renault", "peugeot", 
+                "deowoo", "hudson", "citroen", "mg", "mclaren",
             ]
         related_vocab = related_vocab + related_emojis
-        if False: 
-            for emoji_text in cat_related_emojis:
+        if False: # save file with all emojis so we can inspect
+            normal_chars = [
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
+                "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", 
+                "u", "v", "w", "x", "y", "z", ".", "1", "2", "3", 
+                "4", "5", "6", "7", "8", "9", "0", "!", "-", "(", 
+                ")", "$", "<", "/", ">", "?", "_", "|", 
+                "A", "B", "C", "D", "E", "F", "G", "H", "I",
+                "J", "K", "L", "M", "N", "O", "P", "Q", "R", 
+                "S", "T", "U", "V", "W", "X", "Y", "Z",
+            ]
+            vocab = self.tokenizer.get_vocab() 
+            potential_emojis = []
+            for key in vocab.keys():
+                emoji = False 
+                for char in key:
+                    if char not in normal_chars:
+                        emoji = True
+                if emoji:
+                    potential_emojis.append(key)
+                
+            emoji_texts = []
+            actual_emojis = []
+            for emoji_text in potential_emojis:
                 try:
                     emoji = self.tokenizer.decode(vocab[emoji_text])
-                    print(emoji_text, emoji)
-                except: 
-                    print(emoji_text, "FAIL")
-                    pass 
-                try:
-                    emoji = self.tokenizer.decode(vocab[emoji_text+'</w>'])
-                    print(emoji_text, emoji)
-                except: 
-                    print(emoji_text, "FAIL")
-                    pass 
+                    emoji_texts.append(emoji_text)
+                    actual_emojis.append(emoji)
+                    # print(emoji_text, emoji)
+                except:
+                    pass
+                # try:
+                #     emoji = self.tokenizer.decode(vocab[emoji_text+'</w>'])
+                #     print(emoji_text, emoji)
+                # except: 
+                #     print(emoji_text, "FAIL")
+                #     pass 
+            df = pd.DataFrame() 
+            df['token'] = np.array(emoji_texts)
+            df["emoji"] = np.array(actual_emojis)
+            save_path = "../data/emojis.csv"
+            df.to_csv(save_path, index=None)
             import pdb 
             pdb.set_trace() 
-
+            # ðŁļ²</w>,🚲
+            # ðŁĲ·</w>,🐷
+            # ðŁĲĺ</w>,🐘
+            # ðŁļĤ</w>,🚂
         tmp = []
         for word in related_vocab:
             tmp.append(word)
