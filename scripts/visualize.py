@@ -143,15 +143,15 @@ def test_particular_prompt(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
-    parser.add_argument('--wandb_run_name', default="firm-water-129" ) 
+    parser.add_argument('--wandb_run_name', default="gallant-cherry-174" ) 
     parser.add_argument('--allow_related_prompts', type=bool, default=False ) 
     parser.add_argument('--N_latents', type=int, default=20 )   # N imagges
     parser.add_argument('--seed', type=int, default=2 )   
-    parser.add_argument('--prompt', default="" )   # use exact prompt? 
+    parser.add_argument('--prompt', default="" )   # use exact prompt instead? 
     parser.add_argument('--prepend_to_text', default="a picture of a dog")
     parser.add_argument('--prepend_task', type=bool, default=False)
-    parser.add_argument('--n_tokens', type=int, default=3 ) 
-    parser.add_argument('--optimal_class', default="cat")
+    parser.add_argument('--n_tokens', type=int, default=4 ) 
+    parser.add_argument('--optimal_class', default="car")
     args = parser.parse_args() 
     if not args.prepend_task: # if default task, prepend_to_text = ""
         args.prepend_to_text = ""
@@ -178,3 +178,7 @@ if __name__ == "__main__":
     # zany-forest-128
     # TOKENIZED: simon,adoptdont,batt,porta,sima,<|endoftext|>
     # adoptdont --> adopt dont shop ad campaign posters --> 1/3 are dogs 
+
+    # CARS
+    # gallant-cherry-174
+    # TOKENIZED (4 tokens): tour,fist,🇺�,<|endoftext|>
