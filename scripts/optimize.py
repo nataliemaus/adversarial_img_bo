@@ -232,6 +232,7 @@ if __name__ == "__main__":
 
     # conda create --name adv_env --file adv_env.txt
     # conda activate adv_env
+    # gauss node 2! 
     # tmux attach -t adv1 , adv2, adv3, adv4
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 3 --prepend_task True
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --prepend_task True
@@ -256,7 +257,7 @@ if __name__ == "__main__":
     # Up Next::: ,    conda activate adv_env
     # gauss node 1, tmux attach -t adv11, adv12, adv13
     # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 4 --bsz 10 --seed 1 --optimal_class car 
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --bsz 10 --seed 1 --optimal_class car 
-    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class car
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class car 
+    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --n_tokens 8 --bsz 10 --seed 1 --optimal_class car
     # gauss node 2, tmux attach -t adv5 
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 8 --bsz 10 --seed 1 --optimal_class car
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 10 --bsz 5 --seed 1 --optimal_class car

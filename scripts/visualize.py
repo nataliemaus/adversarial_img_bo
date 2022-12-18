@@ -160,7 +160,6 @@ if __name__ == "__main__":
         test_particular_prompt(args)
     else:
         visualizev2(args) 
-    
 
     # python3 visualize.py --prepend_task True --wandb_run_name random --N_latents 3
     # python3 visualize.py --prepend_task True --wandb_run_name random --N_latents 3 --prompt "pig pig pig"
