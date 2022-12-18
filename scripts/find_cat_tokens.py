@@ -22,27 +22,26 @@ def load_data():
     losses = df['cat_loss'].values 
     return tokens, losses 
 
-# def load_data():
-#     data_files = glob.glob("single_token_cat_losses_*.csv")
-#     # 49408
-#     all_tokens = []
-#     all_losses = []
-#     dfs = [] 
-#     for file in data_files: dfs.append(pd.read_csv(file))
-#     for df in dfs: all_tokens = all_tokens + df['token'].values.tolist() 
-#     for df in dfs:  all_losses = all_losses + df['cat_loss'].values.tolist() 
-#     save_data(all_tokens, all_losses, "all_single_token_cat_losses.csv")
-
-#     df = pd.read_csv("all_single_token_cat_losses.csv")
-
-#     tokens_arr = np.array(all_tokens)
-#     losses_arr = np.array(all_losses)
-#     all_tokens[losses_arr.argmin()]
-#     ind = np.argsort(losses_arr) # , -4)[-4:]
-#     sorted_tokens = tokens_arr[ind]
-#     sorted_losses = losses_arr[ind]
-#     # u_tokens = np.unique(tokens_arr) # save size :) 
-#     # 49408
+def compilte_data(): 
+    # put together csvs into single sorted csv 
+    optimal_class = "car"
+    data_files = glob.glob(f"single_token_{optimal_class}_losses_*.csv")
+    # 49408 total tokens! 
+    all_tokens = []
+    all_losses = []
+    dfs = [] 
+    for file in data_files: dfs.append(pd.read_csv(file))
+    for df in dfs: all_tokens = all_tokens + df['token'].values.tolist() 
+    for df in dfs:  all_losses = all_losses + df['loss'].values.tolist()
+    tokens_arr = np.array(all_tokens)
+    losses_arr = np.array(all_losses)
+    ind = np.argsort(losses_arr) # , -4)[-4:]
+    sorted_tokens = tokens_arr[ind].tolist()
+    sorted_losses = losses_arr[ind].tolist() 
+    save_data(sorted_tokens, sorted_losses, f"all_single_token_{optimal_class}_losses.csv")
+    # test_df = pd.read_csv(f"all_single_token_{optimal_class}_losses.csv")
+    # tokens = test_df['token'].values
+    # losses = test_df['loss'].values
 
 
 if __name__ == "__main__":
@@ -97,6 +96,7 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=6 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 32000 --stop_ix 40000
     # CUDA_VISIBLE_DEVICES=7 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 40000 
 
+    # conda activate adv_env
     # gauss node 1
     # tmux attach -t adv11, adv12, adv13
     # CUDA_VISIBLE_DEVICES=6 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 0 --stop_ix 12500 --optimal_class car
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=8 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 25000 --stop_ix 37500 --optimal_class car
     # gauss node 2
     # tmux attach -t adv5
-    # CUDA_VISIBLE_DEVICES=9 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 37500 --optimal_class car
-
+    # should end: 49408
+    # CUDA_VISIBLE_DEVICES=9 python3 find_cat_tokens.py --bsz 10 --save_every 2 --start_ix 49308 --optimal_class car
 
 

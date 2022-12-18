@@ -250,3 +250,11 @@ if __name__ == "__main__":
 
     # moving xs from desktop to jkgardner: 
     # rsync -a --ignore-existing best_xs jkgardner.com:/home/nmaus/adversarial_img_bo/
+
+    # Up Next::: ,    conda activate adv_env
+    # gauss node 1, tmux attach -t adv11, adv12, adv13
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 4 --bsz 10 --seed 1 --optimal_class car 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class car 
+    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --n_tokens 8 --bsz 10 --seed 1 --optimal_class car
+    # gauss node 2, tmux attach -t adv5 
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 10 --bsz 10 --seed 1 --optimal_class car
