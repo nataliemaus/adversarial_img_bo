@@ -273,6 +273,7 @@ class AdversarialsObjective(Objective):
                 'andretti', "parking", "parked", "driving",
                 "roadtrip", "road", "offroad", "dealership",
                 "cmc", "cadillac", "yamaha", "traffic", 
+                "vidar",
             ]
         related_vocab = related_vocab + related_emojis
         if False: # save file with all emojis so we can inspect

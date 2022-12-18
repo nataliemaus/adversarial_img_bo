@@ -89,15 +89,9 @@ if __name__ == "__main__":
     import pdb 
     pdb.set_trace() 
 
+    # tmux new -s adv14 
+    # conda activate adv_env
     # conda activate adv_env
     # gauss node 1
-    # tmux attach -t adv11, adv12, adv13
-    # CUDA_VISIBLE_DEVICES=6 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 0 --stop_ix 12500 --optimal_class violin
-    # CUDA_VISIBLE_DEVICES=7 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 12500 --stop_ix 25000 --optimal_class violin
-    # CUDA_VISIBLE_DEVICES=8 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 25000 --stop_ix 37500 --optimal_class violin
-    # gauss node 2
-    # tmux attach -t adv5
-    # should end: 49408
-    # CUDA_VISIBLE_DEVICES=9 python3 find_cat_tokens.py --bsz 10 --save_every 2 --start_ix 49308 --optimal_class violin
-
+    # CUDA_VISIBLE_DEVICES=3 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 0 --optimal_class violin
 
