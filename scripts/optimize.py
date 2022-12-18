@@ -234,21 +234,21 @@ if __name__ == "__main__":
     # conda activate adv_env
     # gauss node 2! 
     # tmux attach -t adv1 , adv2, adv3, adv4
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 3 --prepend_task True
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 5 --prepend_task True
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 6 --prepend_task True
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 12 --prepend_task True
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 6 --prepend_task True
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 14 --prepend_task True
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 7 --prepend_task True
     # tmux attach -t adv10 (node1)
     # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 4 --prepend_task True
 
     # Allegro 
     # tmux attach -t adv adv2, adv3, adv4, adv5, adv6, adv7 
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 8 --prepend_task True --bsz 20
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 9 --prepend_task True --bsz 20
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 20 --prepend_task True --bsz 20
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 16 --prepend_task True --bsz 20
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 10 --prepend_task True --bsz 20
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 6 --prepend_task True --bsz 20 --seed 3
     # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 8 --prepend_task True --bsz 20 --seed 3
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 11 --prepend_task True --bsz 20
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 50 --prepend_task True --bsz 20
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 12 --prepend_task True --bsz 20
 
     # moving xs from desktop to jkgardner: 

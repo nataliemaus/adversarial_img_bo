@@ -42,7 +42,7 @@ class AdversarialsObjective(Objective):
         #     self.prepend_to_text = self.prepend_to_text + " <|endoftext|>" 
         self.N_extra_prepend_tokens = len(self.prepend_to_text.split() )
 
-        assert optimal_class in ["cat", "tricycle", "pan", "car"]
+        assert optimal_class in ["cat", "car", "violin"]
         self.optimal_class = optimal_class
         if self.prepend_to_text:
             assert project_back
@@ -173,12 +173,30 @@ class AdversarialsObjective(Objective):
                 "monkey", "monkeys", "koala", "koalas",
                 "mouse", "mouses",
             ]
-        elif self.optimal_class == "tricycle":
-            related_emojis = [] 
-            related_vocab = ["tricycle", "bike", "bicycle", "unicycle", "cycle", "three", "wheel"]
-        elif self.optimal_class == "pan":
-            related_emojis = [] 
-            related_vocab = ["pan", "pot", "cook", "frying", "hot", "stove", "stove-top"]
+        elif self.optimal_class == "violin":
+            related_vocab = [
+                "violin", "fiddle", "stradivarius",
+                "amati", "pochette",
+                "violín", "violon", "violino", "violina",
+                "housle", "viool", "string", "strings",
+                "violins", "fiddles", "stradivarius'",
+                "amatis", "pochettes",
+                "violíns", "violons", "violinos", "violinas",
+                "housles", "viools", 
+                "bass", "bass'", "viola", "violas",
+                "cello", "cellos", "banjo", "banjos",
+                "mandolin", "mandolins", "ukulele", "ukuleles",
+                "mandoline", "mandolines",
+                "guitar", "guitars", "kora", "koras",
+                "violoncello", "violoncellos",
+                "doublebass", "doublebass'",
+                "rebec", "rebecs", "baryton", "barytons",
+                "laute", "lautes", "theorbe", "theorbes",
+                "tanbur", "tanburs", "erzlaute", "erzlautes"
+            ] 
+            related_emojis = [
+                "ðŁİ¸" # 🎸
+            ] 
         elif self.optimal_class == "car":
             related_emojis = [
                 "ðŁļĹ", # 🚗
@@ -475,12 +493,9 @@ class AdversarialsObjective(Objective):
         if self.optimal_class == "cat":
             class_ix0 = 281
             class_ix1 = 282
-        elif self.optimal_class == "tricycle":
-            class_ix0 = 870
-            class_ix1 = 871
-        elif self.optimal_class == "pan":
-            class_ix0 = 567
-            class_ix1 = 568
+        elif self.optimal_class == "violin":
+            class_ix0 = 889
+            class_ix1 = 890 
         elif self.optimal_class == "car": 
             # 705, 706 = passenger car (but could be train passenger car too... idk, stick w/ sports car!)
             # 817, 818 = sports car !!! 

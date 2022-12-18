@@ -88,23 +88,16 @@ if __name__ == "__main__":
     save_data(keys, all_losses, save_path)
     import pdb 
     pdb.set_trace() 
-    # pip install pandas 
-    # CUDA_VISIBLE_DEVICES=0 python3 find_cat_tokens.py --bsz 2 --save_every 2 --start_ix 0 --stop_ix 8 --optimal_class tricycle
-    # CUDA_VISIBLE_DEVICES=3 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 8000 --stop_ix 16000
-    # CUDA_VISIBLE_DEVICES=4 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 16000 --stop_ix 24000
-    # CUDA_VISIBLE_DEVICES=5 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 24000 --stop_ix 32000
-    # CUDA_VISIBLE_DEVICES=6 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 32000 --stop_ix 40000
-    # CUDA_VISIBLE_DEVICES=7 python3 find_cat_tokens.py --bsz 20 --save_every 10 --start_ix 40000 
 
     # conda activate adv_env
     # gauss node 1
     # tmux attach -t adv11, adv12, adv13
-    # CUDA_VISIBLE_DEVICES=6 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 0 --stop_ix 12500 --optimal_class car
-    # CUDA_VISIBLE_DEVICES=7 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 12500 --stop_ix 25000 --optimal_class car
-    # CUDA_VISIBLE_DEVICES=8 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 25000 --stop_ix 37500 --optimal_class car
+    # CUDA_VISIBLE_DEVICES=6 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 0 --stop_ix 12500 --optimal_class violin
+    # CUDA_VISIBLE_DEVICES=7 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 12500 --stop_ix 25000 --optimal_class violin
+    # CUDA_VISIBLE_DEVICES=8 python3 find_cat_tokens.py --bsz 10 --save_every 20 --start_ix 25000 --stop_ix 37500 --optimal_class violin
     # gauss node 2
     # tmux attach -t adv5
     # should end: 49408
-    # CUDA_VISIBLE_DEVICES=9 python3 find_cat_tokens.py --bsz 10 --save_every 2 --start_ix 49308 --optimal_class car
+    # CUDA_VISIBLE_DEVICES=9 python3 find_cat_tokens.py --bsz 10 --save_every 2 --start_ix 49308 --optimal_class violin
 
 
