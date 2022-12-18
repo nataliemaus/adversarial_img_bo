@@ -209,7 +209,6 @@ if __name__ == "__main__":
     parser.add_argument('--n_tokens', type=int, default=3 )  
     parser.add_argument('--optimal_class', default="cat" )  
     args = parser.parse_args() 
-    assert args.optimal_class in ["cat", "car"] 
     if not args.prepend_task: # if default task, prepend_to_text = ""
         args.prepend_to_text = ""
     assert args.minimize 
@@ -260,4 +259,4 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class car 
     # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --n_tokens 8 --bsz 10 --seed 1 --optimal_class car
     # gauss node 2, tmux attach -t adv5 
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 10 --bsz 5 --seed 1 --optimal_class car
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 6 --bsz 5 --seed 1 --optimal_class violin
