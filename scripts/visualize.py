@@ -23,6 +23,7 @@ def test_prompt(args, prompt, use_fixed_latents):
         allow_related_prompts=args.allow_related_prompts,
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
+        optimal_class=args.optimal_class,  
     ) 
     if not use_fixed_latents:
         for i in range(10):
@@ -92,6 +93,7 @@ def visualizev2(args):
         visualize=True,
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
+        optimal_class=args.optimal_class,   
     )
     if args.wandb_run_name == "random":
         best_x = torch.randn(1, objective.dim)
@@ -122,6 +124,7 @@ def test_particular_prompt(args):
         allow_related_prompts=args.allow_related_prompts,
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
+        optimal_class=args.optimal_class,  
     ) 
     if args.prepend_to_text:
         prompt = [args.prompt + " " + args.prepend_to_text + " <|endoftext|>" ]
@@ -144,11 +147,11 @@ if __name__ == "__main__":
     parser.add_argument('--allow_related_prompts', type=bool, default=False ) 
     parser.add_argument('--N_latents', type=int, default=20 )   # N imagges
     parser.add_argument('--seed', type=int, default=2 )   
-
     parser.add_argument('--prompt', default="" )   # use exact prompt? 
     parser.add_argument('--prepend_to_text', default="a picture of a dog")
     parser.add_argument('--prepend_task', type=bool, default=False)
     parser.add_argument('--n_tokens', type=int, default=3 ) 
+    parser.add_argument('--optimal_class', default="cat")
     args = parser.parse_args() 
     if not args.prepend_task: # if default task, prepend_to_text = ""
         args.prepend_to_text = ""
@@ -162,7 +165,6 @@ if __name__ == "__main__":
     # python3 visualize.py --prepend_task True --wandb_run_name random --N_latents 3
     # python3 visualize.py --prepend_task True --wandb_run_name random --N_latents 3 --prompt "pig pig pig"
 
-    
     # conda activate lolbo_mols 
     # ['readkitty urban'] (giddy-moon-70) mostly cats! 
     # ['iz dal<|endoftext|><|endoftext|>siberian'] (rosy-meadow-71) 2/10 cats 

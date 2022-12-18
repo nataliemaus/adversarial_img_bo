@@ -120,6 +120,8 @@ def optimize(args):
         allow_related_prompts=args.allow_related_prompts,
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
+        optimal_class=args.optimal_class,
+        visualize=False,
     )
     
     args_dict = vars(args)
@@ -254,7 +256,7 @@ if __name__ == "__main__":
     # Up Next::: ,    conda activate adv_env
     # gauss node 1, tmux attach -t adv11, adv12, adv13
     # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 4 --bsz 10 --seed 1 --optimal_class car 
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class car 
-    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --n_tokens 8 --bsz 10 --seed 1 --optimal_class car
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --bsz 10 --seed 1 --optimal_class car 
+    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class car
     # gauss node 2, tmux attach -t adv5 
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 10 --bsz 10 --seed 1 --optimal_class car
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 8 --bsz 10 --seed 1 --optimal_class car
