@@ -181,4 +181,5 @@ if __name__ == "__main__":
 
     # CARS
     # gallant-cherry-174
+    # prompt: tourfist🇺�<|endoftext|>
     # TOKENIZED (4 tokens): tour,fist,🇺�,<|endoftext|>
