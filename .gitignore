@@ -6,3 +6,4 @@ __pycache__/*
 *.pt 
 *.csv
 imagenet_classes.txt
+ae_models/*.pkl 
