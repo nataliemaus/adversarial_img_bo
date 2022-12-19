@@ -47,7 +47,12 @@ def train(args):
     ae = AE(
         input_shape=768,
         n_layers=args.n_layers,
-    ).cuda() 
+    ) 
+    if args.load_ckpt_wandb_name: 
+        path_to_state_dict = f"../ae_models/{args.load_ckpt_wandb_name}.pkl" 
+        state_dict = torch.load(path_to_state_dict) # load state dict 
+        ae.load_state_dict(state_dict, strict=True) 
+    ae = ae.cuda() 
     ae = ae.train() 
     objective = AdversarialsObjective(
         allow_related_prompts=True
@@ -84,6 +89,7 @@ if __name__ == "__main__":
     parser.add_argument('--wandb_entity', default="nmaus" ) 
     parser.add_argument('--wandb_project_name', default="adversarial-bo-ae" )  
     parser.add_argument('--n_epochs', type=int, default=200_000_000_000_000_000_000) 
+    parser.add_argument('--load_ckpt_wandb_name', default="" ) 
     # args 
     parser.add_argument('--lr', type=float, default=0.001 )  
     parser.add_argument('--bsz', type=int, default=128)  
@@ -91,3 +97,4 @@ if __name__ == "__main__":
     args = parser.parse_args() 
     # torch.Size([49408, 768]) = Ntokens x 768 
     train(args)
+    # CUDA_VISIBLE_DEVICES=0 python3 simple_ae.py --load_ckpt_wandb_name sage-firefly-13 --lr 0.0001 --n_layers 5
