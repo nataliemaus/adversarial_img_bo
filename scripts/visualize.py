@@ -143,19 +143,18 @@ def test_particular_prompt(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
-    parser.add_argument('--wandb_run_name', default="gallant-cherry-174" ) 
     parser.add_argument('--allow_related_prompts', type=bool, default=False ) 
     parser.add_argument('--N_latents', type=int, default=20 )   # N imagges
     parser.add_argument('--seed', type=int, default=2 )   
     parser.add_argument('--prompt', default="" )   # use exact prompt instead? 
     parser.add_argument('--prepend_to_text', default="a picture of a dog")
-    parser.add_argument('--prepend_task', type=bool, default=False)
-    parser.add_argument('--n_tokens', type=int, default=4 ) 
+    parser.add_argument('--prepend_task', type=bool, default=True)
+    parser.add_argument('--n_tokens', type=int, default=6 ) 
+    parser.add_argument('--wandb_run_name', default="daily-plasma-183" ) 
     parser.add_argument('--optimal_class', default="car")
     args = parser.parse_args() 
     if not args.prepend_task: # if default task, prepend_to_text = ""
         args.prepend_to_text = ""
-        
     if args.prompt: #if set prompt 
         test_particular_prompt(args)
     else:
@@ -183,3 +182,23 @@ if __name__ == "__main__":
     # gallant-cherry-174
     # prompt: tourfist🇺�<|endoftext|>
     # TOKENIZED (4 tokens): tour,fist,🇺�,<|endoftext|>
+
+    # logical-dew-175 20/20 cars! :) (not shared in slack though)
+    # prompt: iii hyunenv <|endoftext|>😍<|endoftext|>
+    # TOKENIZED (6 tokens): iii,hyun,env,<|endoftext|>,😍,<|endoftext|>
+
+    # CATS + PREPEND "a picture of a dog"
+    
+    # robust-planet-148     16/20 are cats! 
+    # TOKENIZED (4 tokens pre-pended): acti,weird,gat,geon,a,picture,of,a,dog,<|endoftext|>
+    # PROMPT: actiweirdgatgeon a picture of a dog <|endoftext|>
+
+    # CARS + PREPEND "a picture of a dog"
+
+    # fallen-morning-179    15/20 are cars! 
+    # TOKENIZED (4 tokens pre-pended): \,ential,speed,eu,a,picture,of,a,dog,<|endoftext|>
+    # prompt: \ential speedeu a picture of a dog <|endoftext|>
+
+    # daily-plasma-183  16/20 are cars! 
+    # TOKENIZED (6 tokens pre-pended):  prelude,fro,casi,gal,articles,introduce,a,picture,of,a,dog,<|endoftext|>
+    # prompt: prelude frocasigalarticles introduce a picture of a dog <|endoftext|>

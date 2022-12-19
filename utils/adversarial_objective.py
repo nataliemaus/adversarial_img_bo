@@ -33,7 +33,6 @@ class AdversarialsObjective(Objective):
             ub=None,
             **kwargs,
         ) 
-
         # CONSTANTS
         # if prepend_to_text is not "", we will prepend the adversairla prompt to the text
         # ie prepend_to_text = "a picture of a dog"
@@ -192,7 +191,15 @@ class AdversarialsObjective(Objective):
                 "doublebass", "doublebass'",
                 "rebec", "rebecs", "baryton", "barytons",
                 "laute", "lautes", "theorbe", "theorbes",
-                "tanbur", "tanburs", "erzlaute", "erzlautes"
+                "tanbur", "tanburs", "erzlaute", "erzlautes",
+                "violinist", "violinists", "dartmoor", "dartmoors",
+                "coco", "twood", "eler", "dm", "dales", "sterling",
+                "lexa", "aaliyah", "danes", "burne", "jlo", "lara",
+                "cchini", "ise", "volo", "volos", "uke", "ukes",
+                "ukulele", "ukuleles", "clara", "inte", "fushi",
+                "fus", "bein", "zier", "tonga", "apache", "sade",
+                "sousa", "ayu", "nishings", "bugatti", "jn",
+                "leighton", "sov", "fas",
             ] 
             related_emojis = [
                 "ðŁİ¸" # 🎸

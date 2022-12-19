@@ -201,6 +201,7 @@ if __name__ == "__main__":
     parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)") 
     parser.add_argument('--avg_over_N_latents', type=int, default=5)
     parser.add_argument('--threshold_save_best', type=int, default=-4)
+    parser.add_argument('--more_hdims', type=bool, default=True) # for >8 tokens only 
     ## modify... 
     parser.add_argument('--seed', type=int, default=1 ) 
     parser.add_argument('--bsz', type=int, default=10)  
@@ -211,6 +212,9 @@ if __name__ == "__main__":
     args = parser.parse_args() 
     if not args.prepend_task: # if default task, prepend_to_text = ""
         args.prepend_to_text = ""
+    #     # 4, 6, 8 
+    if (args.n_tokens > 8) and args.more_hdims: # best cats and cars so far have n_tokens = 4, 6, and 8
+        args.hidden_dims = tuple_type("(1024,256,128,64)") 
     assert args.minimize 
     assert args.version == 4
     if args.debug:
@@ -256,7 +260,7 @@ if __name__ == "__main__":
     # Up Next::: ,    conda activate adv_env
     # gauss node 1, tmux attach -t adv11, adv12, adv13
     # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 4 --bsz 10 --seed 1 --optimal_class car --prepend_task True 
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class car 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class car --prepend_task True
     # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --n_tokens 8 --bsz 10 --seed 1 --optimal_class car --prepend_task True 
     # gauss node 2, tmux attach -t adv5
     # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 12 --bsz 2 --seed 1 --optimal_class car --prepend_task True 

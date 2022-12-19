@@ -24,7 +24,7 @@ def load_data():
 
 def compilte_data(): 
     # put together csvs into single sorted csv 
-    optimal_class = "car"
+    optimal_class = "violin"
     data_files = glob.glob(f"single_token_{optimal_class}_losses_*.csv")
     # 49408 total tokens! 
     all_tokens = []
