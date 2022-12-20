@@ -7,3 +7,7 @@ __pycache__/*
 *.csv
 imagenet_classes.txt
 ae_models/*.pkl 
+nltk_data/
+nltk_data/*
+corpora/
+corpora/*

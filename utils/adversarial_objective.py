@@ -7,6 +7,11 @@ from torchvision import transforms
 from .objective import Objective
 import pandas as pd 
 import numpy as np
+import sys 
+sys.path.append("../")
+from .get_synonyms import get_synonyms # 
+from .related_vocab import RELATED_VOCAB_DICT
+from .imagenet_classes import load_imagenet
 
 class AdversarialsObjective(Objective):
     def __init__(
@@ -18,7 +23,8 @@ class AdversarialsObjective(Objective):
         use_fixed_latents=False,
         project_back=True, # project back embedding to closest real tokens
         avg_over_N_latents=8,
-        allow_related_prompts=True,
+        exclude_all_related_prompts=False,
+        exclude_some_related_prompts=True,
         visualize=False,
         prepend_to_text="",
         optimal_class="cat",
@@ -41,10 +47,11 @@ class AdversarialsObjective(Objective):
         #     self.prepend_to_text = self.prepend_to_text + " <|endoftext|>" 
         self.N_extra_prepend_tokens = len(self.prepend_to_text.split() )
 
-        assert optimal_class in ["cat", "car", "violin"]
         self.optimal_class = optimal_class
         if self.prepend_to_text:
             assert project_back
+        self.exclude_all_related_prompts=exclude_all_related_prompts
+        self.exclude_some_related_prompts=exclude_some_related_prompts
         self.visualize = visualize # flag to print individual tokens
         self.avg_over_N_latents = avg_over_N_latents # for use when use_fixed_latents==False,
         self.project_back = project_back
@@ -112,279 +119,33 @@ class AdversarialsObjective(Objective):
         else:
             self.fixed_latents = None 
         
-        vocab = self.tokenizer.get_vocab()
-        if not allow_related_prompts:
-            related_vocab = self.get_related_vocab() 
-            # do not allow cat related prompts 
-            related_keys = [] 
-            related_values = [] 
-            non_related_values = []
-            for key in vocab.keys():
-                # get rid of all words containg the optimal word as well
-                if key in related_vocab or (self.optimal_class in key):
-                    related_keys.append(key)
-                    related_values.append(vocab[key])
-                else:
-                    non_related_values.append(vocab[key])
-            self.all_token_idxs = non_related_values
-        else:
-            self.all_token_idxs = list(vocab.values())
+        self.vocab = self.tokenizer.get_vocab()
 
+        if self.exclude_all_related_prompts or self.exclude_some_related_prompts:
+            # if only exlucde some (optimal class name, optimal class name +s, 
+            #   anything containg optimal class name)
+            related_vocab = get_synonyms(self.optimal_class) + [self.optimal_class]
+            related_vocab_s = [word + "s" for word in related_vocab]
+            self.related_vocab = related_vocab + related_vocab_s 
+            if self.exclude_all_related_prompts: # cat, car or violin only prepped 
+                self.related_vocab = RELATED_VOCAB_DICT[self.optimal_class]
+            self.all_token_idxs = self.get_non_related_values() 
+        else:
+            self.all_token_idxs = list(self.vocab.values())
         self.all_token_embeddings = self.word_embedder(torch.tensor(self.all_token_idxs).to(self.torch_device)) 
         # torch.Size([49408, 768])
-        # torch.Size([49402, 768])
-        # self.all_token_embeddings = self.word_embedder(torch.tensor([i for i in range(len(self.tokenizer.get_vocab()))]).to(self.torch_device))
 
-    def get_related_vocab(self,):
-        if self.optimal_class == "cat":
-            related_emojis = [
-                'ðŁĺ¸', # 😸
-                'ðŁĺ»', # 😻
-                "ðŁĺ¹", # 😹 
-                "ðŁĺ»ðŁĺ»", # 😻😻
-                "ðŁĺº", # 😺
-                "ðŁĺ¼", # 😼
-                "ðŁĺ½", # 😽
-                "ðŁĺ¹ðŁĺ¹", # 😹😹
-                "ðŁĲ±", # 🐱
-                "ðŁĲķ", # 🐕
-            ]
-            related_vocab = [
-                "cat", "cats", "kitten", "kittens", "lion", "lions", "tiger", "tigers",
-                "lynx", "leopard", "leopards", "panther", "panthers", "meow", "meows", 
-                "kitty", "coyote", "kittys", "coyotes",
-                "catal", "catals", "wildcat", "wildcats", "catsoftwitter", "caturday",
-                "tabby", "miaw", "kitties", "catday", "feline", "bobcats", "bobcat", "manx",
-                "catsofinstagram", "purr", "purrs", "siamese", "shorthair", "persian", 
-                "ragdoll", "sphynx", "birmin", "furi", "fox", "possum", "foxes", "possums",
-                "abyssinian", "bobtail", "wirehair", "bengal", "burmese", 
-                "chartreux", "cornish", "mau", "egyptian", "calico",
-                "pus", "catar", "chatt", "cate", "chatur", "adri", "raccoon",
-                "gato", "gatos", "gata", "gatas", "gatita", "gatitas", "gatito", 
-                "catalo", "hm", "ha", "catt", "nya", 
-                "gatitos", "leon", "leons", "maullar", "chatter", "pur", "kot",
-                "chat", "chatte", "chats", "chattes", "chaton", "chatons", "miaou",
-                "roar", "libby", "cub", "figaro", "kats", "kat",
-                "mink", "gwyne", "meo", "bengals", "kati", "pet", "pets",
-                "squirrel", "squirrels", "cougar", "cougars",
-                "rat", "rats", "bunny", "rabbit", "rabbits",
-                "badgers", "badger", "hamster", "hamsters", 
-                "monkey", "monkeys", "koala", "koalas",
-                "mouse", "mouses",
-            ]
-        elif self.optimal_class == "violin":
-            related_vocab = [
-                "violin", "fiddle", "stradivarius",
-                "amati", "pochette",
-                "violín", "violon", "violino", "violina",
-                "housle", "viool", "string", "strings",
-                "violins", "fiddles", "stradivarius'",
-                "amatis", "pochettes",
-                "violíns", "violons", "violinos", "violinas",
-                "housles", "viools", 
-                "bass", "bass'", "viola", "violas",
-                "cello", "cellos", "banjo", "banjos",
-                "mandolin", "mandolins", "ukulele", "ukuleles",
-                "mandoline", "mandolines",
-                "guitar", "guitars", "kora", "koras",
-                "violoncello", "violoncellos",
-                "doublebass", "doublebass'",
-                "rebec", "rebecs", "baryton", "barytons",
-                "laute", "lautes", "theorbe", "theorbes",
-                "tanbur", "tanburs", "erzlaute", "erzlautes",
-                "violinist", "violinists", "dartmoor", "dartmoors",
-                "coco", "twood", "eler", "dm", "dales", "sterling",
-                "lexa", "aaliyah", "danes", "burne", "jlo", "lara",
-                "cchini", "ise", "volo", "volos", "uke", "ukes",
-                "ukulele", "ukuleles", "clara", "inte", "fushi",
-                "fus", "bein", "zier", "tonga", "apache", "sade",
-                "sousa", "ayu", "nishings", "bugatti", "jn",
-                "leighton", "sov", "fas",
-            ] 
-            related_emojis = [
-                "ðŁİ¸" # 🎸
-            ] 
-        elif self.optimal_class == "car":
-            related_emojis = [
-                "ðŁļĹ", # 🚗
-                "ðŁļĺ", # 🚘
-                "ðŁļĻ", # 🚙
-            ]
-            related_vocab = [
-                "car", "cars", "vehicle", "vehicles",
-                "jeep", "jeeps", "automobile", "automobiles",
-                "ford", "fords", "truck", "trucks", "motor", 
-                "motorcycle", "motors", "drive", "drives",
-                "motorcycles", "fast", "wheel", "sport", "wheels",
-                "sports", "shift", "shifts", "gear",
-                "gears", "race", "races", "hotwheels",
-                "bmw", "bmws", "suv", "suvs", "crossover", 
-                "convertible", "convertibles", "crossovers", 
-                "sedan", "sedans", "coupe", "coupes", 
-                "van", "minivan", "vans", "minivans", 
-                "honda", "civic", "altima", "corolla",
-                "hondas", "civics", "altimas", "corollas",
-                "accord", "pickup", "camry", "toyota",
-                "accords", "pickups", "camrys", "toyotas",
-                "nissan", "chevrolet", "chevy", "silverado", 
-                "nissans", "chevrolets", "chevys", "silverados",
-                "malibu", "hot", "rod", "limo", "limousine", 
-                "malibus", "hots", "rods", "limos", "limousines", 
-                "hatchback", "ute", "tourer", "brake", 
-                "hatchbacks", "utes", "tourers", "brakes",
-                "rider", "electric", "gas", "hatch", 
-                "riders", "electrics", "gas'", "hatches", 
-                "spyder", "wagon", "mpv", "mercedes", 
-                "spyders", "wagons", "mpvs", "mercedes'", 
-                "mercedes-benz", "mercedesbenz",
-                "mercedes-benzes", "mercedesbenzes",
-                "porsche", "subaru", "cadillac", 
-                "porsches", "subarus", "cadillacs", 
-                "volkswagen", "lexus", "audi", 
-                "volkswagens", "lexus'", "audis", 
-                "ferrari", "volvo", "jaguar", "gmc",
-                "ferraris", "volvos", "jaguars", "gmcs",
-                "buick", "acura", "bentley", "dodge",
-                "buicks", "acuras", "bentleys", "dodges",
-                "hyundai", "lincoln", "mazda", "landrover",
-                "hyundais", "lincolns", "mazdas", "landrovers",
-                "rover", "tesla", "ram", "kia", "chrysler",
-                "rovers", "teslas", "rams", "kias", "chryslers",
-                "pontiac", "infiniti", "mitsubishi", 
-                "pontiacs", "infinitis", "mitsubishis", 
-                "oldsmobile", "mobile", "maserati", 
-                "oldsmobiles", "mobiles", "maseratis", 
-                "astonmartin", "aston", "bugatti", "fiat",
-                "astonmartins", "astons", "bugattis", "fiats",
-                "mini", "alfaromeo", "alfa", "saab", "genesis",
-                "minis", "alfaromeos", "alfas", "saabs", "genesis'",
-                "suzuki", "studebarker", "renault", "peugeot", 
-                "suzukis", "studebarkers", "renaults", "peugeots", 
-                "deowoo", "hudson", "citroen", "mg", "mclaren",
-                "deowoos", "hudsons", "citroens", "mgs", "mclarens",
-                "lamborghini", "lambo", "auto", "autoshow",
-                "lamborghinis", "lambos", "autos", "autoshows",
-                "vantage", "civic", "vantages", "civics",
-                "mercedes", "srt", "niro", "loeb", "fluence",
-                "mercedes'", "srts", "niros", "loebs", "fluences",
-                "continental", "prius", "evo", "tsla", "gtr",
-                "continentals", "prius'", "evos", "tslas", "gtrs",
-                "mercedesam", "sti", "urus", "sti", "stx",
-                "mercedesams", "stis", "urus'", "stis", "stxs",
-                "biza", 'levin', 'gt', 'opel', 'speeding',
-                "bizas", 'levins', 'gts', 'opels', 'speedings',
-                'skoda', 'subarus', 'sls', 'amg', 'tdi',
-                'skodas', 'subarus', 'sls', 'amgs', 'tdis',
-                'ducati', 'ferrari', 'mitsubishi',
-                'ducatis', 'ferraris', 'mitsubishis',
-                'slr', 'mercedesbenz', 'lyft', 'vitz',
-                'slrs', 'mercedesbenzs', 'lyfts', 'vitzs',
-                'uber', 'ubers', 'quered', 'motoring', 'audi', 'audis',
-                'corvette', 'mustang', 'mustangs', 'jdm', 'christine',
-                'corvettes', 'wagons','jdms', 'christines', 
-                'volvo', 'vette', 'clio', 'accelerate', 'carrera', 
-                'volvos', 'vettes', 'clios', 'accelerates', 'carreras', 
-                'imsa', 'gto', 'gulf', 'csrracing', 'chinook', 
-                'imsas', 'gtos', 'gulfs', 'csrracings', 'chinooks', 
-                'roadster', 'livery', 'supercar', 'amus', 'corsa', 
-                'roadsters', 'liverys', 'amus', 'corsas', 
-                'heli', 'helis', 'humber', 'mga', 'fpv', 'dtm', 
-                'humbers', 'mgas', 'fpvs', 'dtms',
-                'scion','oldsmobile', 'stang', 'motorsport', 'btcc',
-                'scions','oldsmobiles', 'stangs', 'motorsports', 'btccs',
-                'hurst', 'wec', 'octane', 'mopar', 'citroen', 
-                'hursts', 'wecs', 'octanes', 'mopars', 'citroens',
-                'hsv', 'speeds', 'parked', 'supersport', 'cuba', 
-                'hsvs', 'speeds', 'parked', 'supersports', 'cubas',
-                'apc', 'ministerial', 'awd', 'forza', 'diecast', 
-                'apcs', 'ministerials', 'awds', 'forzas', 'diecasts', 
-                'volkswagen', 'rossi', 'wrc', 'buick', 'alfa',
-                'volkswagens', 'rossis', 'wrcs', 'buicks', 'alfas',
-                'challengers', 'burgring', 'valet', 'holden','valets',
-                'sebring', 'havana', 'pontiac', 'ocon', 'rpm',
-                'chery', 'lancia', 'stis', 'accelerator', 'accelerators', 
-                'gtx', 'racing', 'wku', 'camry', 'formula', 'formulas',
-                'saab', 'saabs', 'rollout', 'penske', 'gle', "duster", 'gti',
-                'cab', "taxi", 'grandprix', "prix", 'challenger', "taxis",
-                'driverless', 'overland', 'healey', 'nitro', 'mhs',
-                'motorbike', 'infiniti', 'tuk', 'chev', 'seb', 'choo'
-                'motorbikes', 'infinitis', 'tuks', 'chevs', 'sebs', 'choos'
-                'alumin', 'brum', 'canon', 'msi', 'jeeplife', 'wagons',
-                'alumins', 'brums', 'canons', 'msis', 'jeeplifes', 'wagons',
-                'impala', 'coupe', 'afcon', 'ssels', 'ka', 'kÃ¶', 'ka', 'cabs',
-                'impalas','coupes','quattros','bentleys', 'sennas',
-                'quattro', 'scd', 'bentley', 'tempest', 'senna', 'umd', 
-                'cusa', 'vettel', 'charger', 'fiat', 'gac', 'venison', 
-                'brough', 'fiawec', 'suv', 'peuge', 'spx', 'wolff', 'rosberg',
-                'smm', 'chevy', 'tdf', 'vauxhall', 'ftp','rosario', 
-                'hino', 'rides', 'ported', 'thwaite',
-                'glendale', 'vehicle', 'cars', 'zil', 'zil',
-                'andretti', "parking", "parked", "driving",
-                "roadtrip", "road", "offroad", "dealership",
-                "cmc", "cadillac", "yamaha", "traffic", 
-                "vidar", "enzo", "camaro", "r8", "z4", "brz",
-                "nsx", "boxster", "maita", "cayman", "205",
-                "595", "356", "berlina", "coupé", "volante",
-                "fastback", "avant", "cabriolet", "targa",
-                "sterrato", "zagato", "vantage", "strada",
-                "atalante", "roads", "cadillacs", "dealerships",
-                "offroads", "vidars","atalantes", "roads"
-            ]
-        related_vocab = related_vocab + related_emojis
-        if False: # save file with all emojis so we can inspect
-            normal_chars = [
-                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
-                "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", 
-                "u", "v", "w", "x", "y", "z", ".", "1", "2", "3", 
-                "4", "5", "6", "7", "8", "9", "0", "!", "-", "(", 
-                ")", "$", "<", "/", ">", "?", "_", "|", 
-                "A", "B", "C", "D", "E", "F", "G", "H", "I",
-                "J", "K", "L", "M", "N", "O", "P", "Q", "R", 
-                "S", "T", "U", "V", "W", "X", "Y", "Z",
-            ]
-            vocab = self.tokenizer.get_vocab() 
-            potential_emojis = []
-            for key in vocab.keys():
-                emoji = False 
-                for char in key:
-                    if char not in normal_chars:
-                        emoji = True
-                if emoji:
-                    potential_emojis.append(key)
-                
-            emoji_texts = []
-            actual_emojis = []
-            for emoji_text in potential_emojis:
-                try:
-                    emoji = self.tokenizer.decode(vocab[emoji_text])
-                    emoji_texts.append(emoji_text)
-                    actual_emojis.append(emoji)
-                    # print(emoji_text, emoji)
-                except:
-                    pass
-                # try:
-                #     emoji = self.tokenizer.decode(vocab[emoji_text+'</w>'])
-                #     print(emoji_text, emoji)
-                # except: 
-                #     print(emoji_text, "FAIL")
-                #     pass 
-            df = pd.DataFrame() 
-            df['token'] = np.array(emoji_texts)
-            df["emoji"] = np.array(actual_emojis)
-            save_path = "../data/emojis.csv"
-            df.to_csv(save_path, index=None)
-            import pdb 
-            pdb.set_trace() 
-            # ðŁļ²</w>,🚲
-            # ðŁĲ·</w>,🐷
-            # ðŁĲĺ</w>,🐘
-            # ðŁļĤ</w>,🚂
-        tmp = []
-        for word in related_vocab:
+    def get_non_related_values(self):
+        tmp = [] 
+        for word in self.related_vocab:
             tmp.append(word)
             tmp.append(word+'</w>') 
-        related_vocab = tmp 
-        return related_vocab 
+        self.related_vocab = tmp
+        non_related_values = []
+        for key in self.vocab.keys():
+            if not ((key in self.related_vocab) or (self.optimal_class in key)):
+                non_related_values.append(self.vocab[key])
+        return non_related_values
 
     def prompt_to_token(self, prompt):
         tokens = self.tokenizer(prompt, padding="max_length", max_length=self.max_num_tokens+2,
@@ -558,7 +319,9 @@ class AdversarialsObjective(Objective):
             class_ix0 = 817
             class_ix1 = 818 
         else:
-            assert 0 
+            ix = load_imagenet()[self.optimal_class]
+            class_ix0 = ix + 1 
+            class_ix1 = ix + 2 
         total_probs = torch.max(probabilities[:,class_ix0:class_ix1], dim = 1).values # classes 281:282 are HOUSE cat classes
         # total_cat_probs = torch.max(probabilities[:,281:286], dim = 1).values # classes 281:286 are cat classes
         #total_dog_probs = torch.sum(probabilities[:,151:268], dim = 1) # classes 151:268 are dog classes
@@ -633,7 +396,6 @@ class AdversarialsObjective(Objective):
                 output_dict[next_type] =  cur_pipe_val
         return output_dict
 
-
     def query_oracle(self, x, return_img=False):
         if not torch.is_tensor(x):
             x = torch.tensor(x, dtype=torch.float16)
@@ -687,7 +449,7 @@ class AdversarialsObjective(Objective):
             y = y*-1 
         if return_img:
             return imgs, x, y # return x becaausee w/ proj back it is the closeest! prompt
-        return y 
+        return x, y 
     
     def get_init_word_embeddings(self, prompts):
         # Word embedding initialization at "cow"

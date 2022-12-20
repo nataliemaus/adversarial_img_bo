@@ -20,7 +20,8 @@ def test_prompt(args, prompt, use_fixed_latents):
         project_back=True,
         use_fixed_latents=use_fixed_latents,
         avg_over_N_latents=args.N_latents,
-        allow_related_prompts=args.allow_related_prompts,
+        exclude_all_related_prompts=args.exclude_all_related_prompts,
+        exclude_some_related_prompts=args.exclude_some_related_prompts,
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
         optimal_class=args.optimal_class,  
@@ -57,7 +58,6 @@ def test_prompt(args, prompt, use_fixed_latents):
 #         use_fixed_latents=True,
 #         visualize=True,
 #         seed=args.seed,
-#         allow_cat_prompts=args.allow_cat_prompts,
 #         prepend_to_text=args.prepend_to_text,
 #     ) 
 #     assert objective.dim == args.n_tokens*768 
@@ -89,7 +89,8 @@ def visualizev2(args):
         use_fixed_latents=False,
         project_back=True,
         avg_over_N_latents=args.N_latents,
-        allow_related_prompts=args.allow_related_prompts,
+        exclude_all_related_prompts=args.exclude_all_related_prompts,
+        exclude_some_related_prompts=args.exclude_some_related_prompts,
         visualize=True,
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
@@ -121,7 +122,8 @@ def test_particular_prompt(args):
         use_fixed_latents=False,
         project_back=True,
         avg_over_N_latents=args.N_latents,
-        allow_related_prompts=args.allow_related_prompts,
+        exclude_all_related_prompts=args.exclude_all_related_prompts,
+        exclude_some_related_prompts=args.exclude_some_related_prompts,
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
         optimal_class=args.optimal_class,  
@@ -143,7 +145,8 @@ def test_particular_prompt(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
-    parser.add_argument('--allow_related_prompts', type=bool, default=False ) 
+    parser.add_argument('--exclude_all_related_prompts', type=bool, default=False ) 
+    parser.add_argument('--exclude_some_related_prompts', type=bool, default=False ) 
     parser.add_argument('--N_latents', type=int, default=20 )   # N imagges
     parser.add_argument('--seed', type=int, default=2 )   
     parser.add_argument('--prompt', default="" )   # use exact prompt instead? 

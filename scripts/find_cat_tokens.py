@@ -1,5 +1,6 @@
 import sys 
 sys.path.append("../")
+from utils.get_synonyms import get_synonyms
 import argparse 
 from utils.adversarial_objective import AdversarialsObjective  
 import math 
@@ -59,7 +60,8 @@ if __name__ == "__main__":
         use_fixed_latents=True,
         project_back=False,
         avg_over_N_latents=2,
-        allow_related_prompts=True,
+        exclude_all_related_prompts=False,
+        exclude_some_related_prompts=False,
         visualize=False,
         prepend_to_text="",
         optimal_class=args.optimal_class,

@@ -6,6 +6,7 @@ sys.path.append("../")
 from gpytorch.mlls import PredictiveLogLikelihood 
 from utils.bo_utils.trust_region import TrustRegionState, generate_batch, update_state
 from utils.bo_utils.ppgpr import GPModelDKL 
+from utils.get_synonyms import get_synonyms
 from torch.utils.data import TensorDataset, DataLoader
 from utils.adversarial_objective import AdversarialsObjective  
 import argparse 
@@ -14,6 +15,8 @@ import math
 import os 
 os.environ["WANDB_SILENT"] = "true" 
 import random 
+import pandas as pd 
+from utils.imagenet_classes import load_imagenet
 
 def initialize_global_surrogate_model(init_points, hidden_dims):
     likelihood = gpytorch.likelihoods.GaussianLikelihood().cuda() 
@@ -26,7 +29,8 @@ def initialize_global_surrogate_model(init_points, hidden_dims):
     model = model.cuda()
     return model  
 
-def start_wandb(args_dict):
+def start_wandb(args):
+    args_dict = vars(args) 
     tracker = wandb.init(
         entity=args_dict['wandb_entity'], 
         project=args_dict['wandb_project_name'],
@@ -59,14 +63,21 @@ def update_surr_model(
     model = model.eval()
     return model
 
-def get_init_prompts(args):
-    single_token_prompts = ["apple", "road", "ocean", "chair", "hat", "store", "knife", "moon", "red", "music"]
-    single_token_prompts = single_token_prompts[0:args.bsz]
+
+def get_init_prompts(args, objective ):
+    related_vocab = objective.related_vocab
+    imagenet_dict = load_imagenet()
+    single_token_prompts = list(imagenet_dict.keys())  # 583 
+    tmp = []
+    for vocab_word in single_token_prompts:
+        if not vocab_word in related_vocab:
+            tmp.append(vocab_word)
+    single_token_prompts = tmp 
     N = args.n_tokens - 1
     if args.prepend_to_text:
         N = args.n_tokens 
-    prompts = []
-    for i in range(len(single_token_prompts)):
+    prompts = [] 
+    for i in range(args.n_init_pts):
         prompt = ""
         for j in range(N):
             if j > 0: 
@@ -79,37 +90,56 @@ def get_init_prompts(args):
 def get_init_data(args, prompts, objective):
     YS = [] 
     XS = [] 
+    PS = []
     # if do batches of more than 10, get OOM 
-    n_batches = math.ceil(args.n_init_pts / len(prompts)) 
+    n_batches = math.ceil(args.n_init_pts / args.bsz) 
     for i in range(n_batches): 
-        X = objective.get_init_word_embeddings(prompts) 
+        prompt_batch = prompts[i*args.bsz:(i+1)*args.bsz] 
+        X = objective.get_init_word_embeddings(prompt_batch) 
         X = X.detach().cpu()  
-        X = X.reshape(len(prompts), objective.dim ) 
-        if i > 0: 
-            X = X + torch.randn(X.shape)* 0.01 # multiply by 0.01 since  word_embed are typically small 
+        X = X.reshape(args.bsz, objective.dim ) 
         XS.append(X)   
         print(X.shape) 
-        YS.append(objective(X.to(torch.float16))) 
+        xs, ys = objective(X.to(torch.float16))
+        YS.append(ys) 
+        PS = PS + xs 
     Y = torch.cat(YS).detach().cpu() 
-    X = torch.cat(XS).detach().cpu() 
+    X = torch.cat(XS).float().detach().cpu() 
     Y = Y.unsqueeze(-1)  
-    return X, Y
+    return X, Y, PS 
 
-def save_stuff(args, X, Y, objective, tracker):
+def save_stuff(args, X, Y, P, objective, tracker):
     best_x = X[Y.argmax(), :].squeeze().to(torch.float16)
-    pass_in_x = torch.cat([best_x.unsqueeze(0)]*args.bsz)
-    imgs, xs, y = objective.query_oracle(pass_in_x, return_img=True)
-    best_imgs = imgs[0] 
-    if type(best_imgs) != list:
-        best_imgs = [best_imgs]
     torch.save(best_x, f"../best_xs/{wandb.run.name}-best-x.pt") 
-    for im_ix, img in enumerate(best_imgs):
-        img.save(f"../best_xs/{wandb.run.name}_im{im_ix}.png")
     if objective.project_back: 
-        best_prompt = xs[0] 
+        best_prompt = P[Y.argmax()]
         tracker.log({"best_prompt":best_prompt}) 
+    if False:
+        pass_in_x = torch.cat([best_x.unsqueeze(0)]*args.bsz)
+        imgs, xs, y = objective.query_oracle(pass_in_x, return_img=True)
+        best_imgs = imgs[0] 
+        if type(best_imgs) != list:
+            best_imgs = [best_imgs]
+        for im_ix, img in enumerate(best_imgs):
+            img.save(f"../best_xs/{wandb.run.name}_im{im_ix}.png")
+        if objective.project_back: 
+            best_prompt = xs[0] 
+            tracker.log({"best_prompt":best_prompt}) 
 
 def optimize(args):
+    if args.debug:
+        args.n_init_pts = 10
+        args.init_n_epochs = 2 
+        args.bsz = 5
+        args.max_n_calls = 60
+        args.avg_over_N_latents = 2
+    assert args.n_init_pts % args.bsz == 0
+    if not args.prepend_task: 
+        args.prepend_to_text = ""
+    if (args.n_tokens > 8) and args.more_hdims: # best cats and cars so far have n_tokens = 4, 6, and 8
+        args.hidden_dims = tuple_type("(1024,256,128,64)") 
+    assert args.minimize 
+    assert args.version == 4
     objective = AdversarialsObjective(
         n_tokens=args.n_tokens,
         minimize=args.minimize, 
@@ -117,21 +147,18 @@ def optimize(args):
         use_fixed_latents=args.use_fixed_latents,
         project_back=args.project_back,
         avg_over_N_latents=args.avg_over_N_latents,
-        allow_related_prompts=args.allow_related_prompts,
+        exclude_all_related_prompts=args.exclude_all_related_prompts,
+        exclude_some_related_prompts=args.exclude_some_related_prompts,
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
         optimal_class=args.optimal_class,
         visualize=False,
     )
-    
-    args_dict = vars(args)
-    tracker = start_wandb(args_dict)
     tr = TrustRegionState(dim=objective.dim)
     assert objective.dim == args.n_tokens*768 
-
     # random sequence of n_tokens of these is each init prompt 
-    prompts = get_init_prompts(args)
-    X, Y = get_init_data(args, prompts, objective)
+    prompts = get_init_prompts(args, objective )
+    X, Y, P = get_init_data(args, prompts, objective)
     model = initialize_global_surrogate_model(X, hidden_dims=args.hidden_dims) 
     model = update_surr_model(
         model=model,
@@ -140,19 +167,21 @@ def optimize(args):
         train_y=Y,
         n_epochs=args.init_n_epochs
     )
-    prev_best = args.threshold_save_best # before about this we don't care to log imgs, etc. s
+    tracker = start_wandb(args)
+    prev_best = -torch.inf 
     while objective.num_calls < args.max_n_calls:
         tracker.log({
             'num_calls':objective.num_calls,
             'best_y':Y.max(),
             'best_x':X[Y.argmax(), :].squeeze().tolist(), 
         } ) 
-        if Y.max().item() > prev_best or args.debug: 
+        if Y.max().item() > prev_best: 
             prev_best = Y.max().item() 
-            save_stuff(args, X, Y, objective, tracker)
-        elif (prev_best == args.threshold_save_best) and (objective.num_calls > 3_000):
-            # if we still don't exceed -1.6 after 10k calls, start recording any progress at all 
-            prev_best = -torch.inf 
+            save_stuff(args, X, Y, P, objective, tracker)
+        if args.break_after_success and (prev_best > args.success_value):
+            # only give n_addtional_evals more calls 
+            args.max_n_calls = objective.num_calls + args.n_addtional_evals 
+            args.break_after_success = False 
         x_next = generate_batch( 
             state=tr,
             model=model,
@@ -162,10 +191,12 @@ def optimize(args):
             acqf=args.acq_func,
             absolute_bounds=(objective.lb, objective.ub)
         ) 
-        y_next = objective(x_next.to(torch.float16) ).unsqueeze(-1)
+        prompts_next, y_next = objective(x_next.to(torch.float16))
+        y_next = y_next.unsqueeze(-1)
         update_state(tr, y_next)
         Y = torch.cat((Y, y_next.detach().cpu()), dim=-2) 
         X = torch.cat((X, x_next.detach().cpu()), dim=-2) 
+        P = P + prompts_next
         model = update_surr_model(
             model=model,
             learning_rte=args.lr,
@@ -187,44 +218,50 @@ if __name__ == "__main__":
     parser.add_argument('--wandb_entity', default="nmaus" ) 
     parser.add_argument('--wandb_project_name', default="adversarial-bo" )  
     parser.add_argument('--n_init_pts', type=int, default=1100) 
-    parser.add_argument('--max_n_calls', type=int, default=200_000_000_000_000_000_000) 
     parser.add_argument('--lr', type=float, default=0.01 ) 
     parser.add_argument('--n_epochs', type=int, default=2)  
     parser.add_argument('--version', type=int, default=4)  
     parser.add_argument('--init_n_epochs', type=int, default=80) 
     parser.add_argument('--acq_func', type=str, default='ts' ) 
-    parser.add_argument('--debug', type=bool, default=False)  
+    parser.add_argument('--debug', type=bool, default=False) 
     parser.add_argument('--minimize', type=bool, default=True)  
     parser.add_argument('--use_fixed_latents', type=bool, default=False)  
     parser.add_argument('--project_back', type=bool, default=True)  
-    parser.add_argument('--allow_related_prompts', type=bool, default=False)  
     parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)") 
-    parser.add_argument('--avg_over_N_latents', type=int, default=5)
-    parser.add_argument('--threshold_save_best', type=int, default=-4)
+    parser.add_argument('--avg_over_N_latents', type=int, default=5) 
     parser.add_argument('--more_hdims', type=bool, default=True) # for >8 tokens only 
     ## modify... 
+    parser.add_argument('--exclude_all_related_prompts', type=bool, default=False)  
+    parser.add_argument('--exclude_some_related_prompts', type=bool, default=True)  
     parser.add_argument('--seed', type=int, default=1 ) 
     parser.add_argument('--bsz', type=int, default=10)  
-    parser.add_argument('--prepend_task', type=bool, default=False)
     parser.add_argument('--prepend_to_text', default="a picture of a dog") 
-    parser.add_argument('--n_tokens', type=int, default=3 )  
-    parser.add_argument('--optimal_class', default="cat" )  
+    parser.add_argument('--optimal_class', default="all" )  
+    parser.add_argument('--break_after_success', type=bool, default=True )
+    parser.add_argument('--max_n_calls', type=int, default=15_000) 
+    parser.add_argument('--success_value', type=int, default=-1)  
+    parser.add_argument('--n_addtional_evals', type=int, default=3_000) 
+    # fr
+    parser.add_argument('--n_tokens', type=int, default=6 )  
+    # only 
+    parser.add_argument('--prepend_task', type=bool, default=False)
+    parser.add_argument('--start_ix', type=int, default=0 ) # start and stop imnet 
+    parser.add_argument('--stop_ix', type=int, default=100 ) # start and stop imnet 
     args = parser.parse_args() 
-    if not args.prepend_task: # if default task, prepend_to_text = ""
-        args.prepend_to_text = ""
-    #     # 4, 6, 8 
-    if (args.n_tokens > 8) and args.more_hdims: # best cats and cars so far have n_tokens = 4, 6, and 8
-        args.hidden_dims = tuple_type("(1024,256,128,64)") 
-    assert args.minimize 
-    assert args.version == 4
-    if args.debug:
-        args.n_init_pts = 10
-        args.init_n_epochs = 2 
-        args.bsz = 5
-        args.max_n_calls = 100
-        args.avg_over_N_latents = 3 
-    assert args.n_init_pts % args.bsz == 0
-    optimize(args)
+
+    if args.optimal_class == "all":
+        imagenet_dict = load_imagenet()
+        classes = list(imagenet_dict.keys())  # 583 
+        for clas in classes[args.start_ix:args.stop_ix]:
+            args.optimal_class = clas 
+            optimize(args) 
+    else:
+        optimize(args)
+    
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 0 --stop_ix 25 
+
+
+
 
     # python3 --prepend_task True --n_tokens 3 
 
@@ -241,26 +278,24 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 6 --prepend_task True
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 14 --prepend_task True
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 7 --prepend_task True
-    # tmux attach -t adv10 (node1)
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 4 --prepend_task True
 
     # Allegro 
-    # tmux attach -t adv adv2, adv3, adv4, adv5, adv6, adv7 
+    # tmux attach -t adv adv2, adv7 
     # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 20 --prepend_task True --bsz 20
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 16 --prepend_task True --bsz 20
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 10 --prepend_task True --bsz 20
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 6 --prepend_task True --bsz 20 --seed 3
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 8 --prepend_task True --bsz 20 --seed 3
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 50 --prepend_task True --bsz 20
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 12 --prepend_task True --bsz 20
 
     # moving xs from desktop to jkgardner: 
     # rsync -a --ignore-existing best_xs jkgardner.com:/home/nmaus/adversarial_img_bo/
 
     # Up Next::: ,    conda activate adv_env
-    # gauss node 1, tmux attach -t adv11, adv12, adv13
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 4 --bsz 10 --seed 1 --optimal_class car --prepend_task True 
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class car --prepend_task True
-    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --n_tokens 8 --bsz 10 --seed 1 --optimal_class car --prepend_task True 
-    # gauss node 2, tmux attach -t adv5
+    # gauss node 1, tmux attach -t adv10, adv11, adv12, adv13, adv14
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 8 --bsz 10 --seed 1 --optimal_class violin 
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class violin 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class violin --prepend_task True
+    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --n_tokens 4 --bsz 10 --seed 1 --optimal_class violin --prepend_task True 
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 4 --bsz 10 --seed 1 --optimal_class violin 
+    # gauss node 2, tmux attach -t adv5 
     # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 12 --bsz 2 --seed 1 --optimal_class car --prepend_task True 
+
+    
