@@ -487,15 +487,9 @@ class AdversarialsObjective(Objective):
             tmp = []
             for x in word_embeddings:
                 tmp.append(self.ae.encoder(x.float()).unsqueeze(0))
-            import pdb 
-            pdb.set_trace() 
             word_embeddings = torch.cat(tmp, 0).to(torch.float16)
 
         return word_embeddings
-        # outputs = self.pipeline(input_type = "word_embedding",
-        #                 input_value = word_embeddings,
-        #                 output_types = ["image", "loss"],
-        #                 fixed_latents=fixed_latents)
 
 
     def proj_word_embedding(self, word_embedding):
