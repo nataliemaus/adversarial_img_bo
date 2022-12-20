@@ -165,7 +165,6 @@ def optimize(args):
         compress_search_space=args.compress_search_space,
     )
     tr = TrustRegionState(dim=objective.dim)
-    assert objective.dim == args.n_tokens*768 
     # random sequence of n_tokens of these is each init prompt 
     prompts = get_init_prompts(args, objective )
     X, Y, P = get_init_data(args, prompts, objective)

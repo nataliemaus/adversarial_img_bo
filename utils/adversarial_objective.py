@@ -143,15 +143,15 @@ class AdversarialsObjective(Objective):
             # latent_dim_dict[dim] = ["devout-firebrand-15", 5]
             n_layers = 5
             load_ckpt_wandb_name = "devout-firebrand-15"
-            ae = AE(
+            self.ae = AE(
                 input_shape=768,
                 n_layers=n_layers,
             ) 
             path_to_state_dict = f"../ae_models/{load_ckpt_wandb_name}.pkl" 
             state_dict = torch.load(path_to_state_dict) # load state dict 
-            ae.load_state_dict(state_dict, strict=True) 
-            ae = ae.cuda() 
-            self.compressed_embeddings = ae.encoder(self.all_token_embeddings.float()).to(torch.float16)
+            self.ae.load_state_dict(state_dict, strict=True) 
+            self.ae = self.ae.cuda() 
+            self.compressed_embeddings = self.ae.encoder(self.all_token_embeddings.float()).to(torch.float16)
             # torch.Size([49408, 768]) --> torch.Size([49407, 24])
             self.latent_dim = self.compressed_embeddings.shape[-1] 
             self.dim = self.n_tokens*self.latent_dim
@@ -483,6 +483,14 @@ class AdversarialsObjective(Objective):
         if self.N_extra_prepend_tokens > 0:
             word_embeddings = word_embeddings[:, 0:-self.N_extra_prepend_tokens, :]
 
+        if self.compress_search_space:
+            tmp = []
+            for x in word_embeddings:
+                tmp.append(self.ae.encoder(x))
+            word_embeddings = torch.cat(tmp, 0) 
+        
+        import pdb 
+        pdb.set_trace() 
         return word_embeddings
         # outputs = self.pipeline(input_type = "word_embedding",
         #                 input_value = word_embeddings,
