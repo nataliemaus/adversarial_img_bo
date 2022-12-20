@@ -5,7 +5,6 @@ __pycache__/*
 *.png
 *.pt 
 *.csv
-imagenet_classes.txt
 ae_models/*.pkl 
 nltk_data/
 nltk_data/*

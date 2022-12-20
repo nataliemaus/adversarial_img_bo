@@ -282,21 +282,21 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 0 --stop_ix 25  --bsz 20
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 0 --stop_ix 25  --bsz 20
 
-    # Up Next::: ,    conda activate adv_env
+    # Up Next::: ,    conda activate adv_env      pip install nltk
     # gauss node 1, tmux attach -t adv0, 1, 2, 3, ..., 8
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --start_ix 0 --stop_ix 25  
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 7 
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 7 --stop_ix 14 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 14 --stop_ix 21 
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 21 --stop_ix 28 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 28  --stop_ix 35 
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 35 --stop_ix 42 
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 42 --stop_ix 49 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 49 --stop_ix 56 
+    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --start_ix 56 --stop_ix 63  
     # gauss node 2, tmux attach -t adv21 , adv22, adv23, adv24, adv29
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 0 --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 63 --stop_ix 70 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 70 --stop_ix 77 
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 77 --stop_ix 84 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 84 --stop_ix 92 
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 92 --stop_ix 10 
     ## !! 14 !! 
