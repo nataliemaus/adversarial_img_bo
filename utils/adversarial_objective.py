@@ -5,13 +5,12 @@ from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import AutoencoderKL, UNet2DConditionModel, PNDMScheduler
 from torchvision import transforms
 from .objective import Objective
-import pandas as pd 
-import numpy as np
 import sys 
 sys.path.append("../")
 from .get_synonyms import get_synonyms # 
 from .related_vocab import RELATED_VOCAB_DICT
 from .imagenet_classes import load_imagenet
+from utils.autoencoder import AE 
 
 class AdversarialsObjective(Objective):
     def __init__(
@@ -26,6 +25,7 @@ class AdversarialsObjective(Objective):
         exclude_all_related_prompts=False,
         exclude_some_related_prompts=True,
         visualize=False,
+        compress_search_space=False,
         prepend_to_text="",
         optimal_class="cat",
         seed=1,
@@ -47,6 +47,7 @@ class AdversarialsObjective(Objective):
         #     self.prepend_to_text = self.prepend_to_text + " <|endoftext|>" 
         self.N_extra_prepend_tokens = len(self.prepend_to_text.split() )
 
+        self.compress_search_space = compress_search_space
         self.optimal_class = optimal_class
         if self.prepend_to_text:
             assert project_back
@@ -133,7 +134,27 @@ class AdversarialsObjective(Objective):
         else:
             self.all_token_idxs = list(self.vocab.values())
         self.all_token_embeddings = self.word_embedder(torch.tensor(self.all_token_idxs).to(self.torch_device)) 
-        # torch.Size([49408, 768])
+
+        if self.compress_search_space:
+            # latent_dim_dict = {} 
+            # latent_dim_dict[24] = ["devout-firebrand-15", 5]
+            # wandb run name, num layers 
+            # latent_dim_dict[dim] = ["devout-firebrand-15", 5]
+            # latent_dim_dict[dim] = ["devout-firebrand-15", 5]
+            n_layers = 5
+            load_ckpt_wandb_name = "devout-firebrand-15"
+            ae = AE(
+                input_shape=768,
+                n_layers=n_layers,
+            ) 
+            path_to_state_dict = f"../ae_models/{load_ckpt_wandb_name}.pkl" 
+            state_dict = torch.load(path_to_state_dict) # load state dict 
+            ae.load_state_dict(state_dict, strict=True) 
+            ae = ae.cuda() 
+            self.compressed_embeddings = ae.encoder(self.all_token_embeddings.float()).to(torch.float16)
+            # torch.Size([49408, 768]) --> torch.Size([49407, 24])
+            self.latent_dim = self.compressed_embeddings.shape[-1] 
+            self.dim = self.n_tokens*self.latent_dim
 
     def get_non_related_values(self):
         tmp = [] 
@@ -183,10 +204,10 @@ class AdversarialsObjective(Objective):
         if word_embed.shape[1:] == (self.max_num_tokens, 768):
             batch_size = word_embed.shape[0]
             rep_uncond_embed = self.uncond_embed.repeat(batch_size, 1, 1)
-            word_embed = torch.cat([rep_uncond_embed[:,0:1,:],
-                                        word_embed,
-                                        rep_uncond_embed[:,-1:,:]],
-                                dim = 1)
+            word_embed = torch.cat(
+                [rep_uncond_embed[:,0:1,:],word_embed,rep_uncond_embed[:,-1:,:]],
+                dim = 1
+            )
         
         return word_embed
 
@@ -483,7 +504,10 @@ class AdversarialsObjective(Objective):
         # Iterate through batch_size
         for i in range(word_embedding.shape[0]):
             # Euclidean Norm
-            dists =  torch.norm(self.all_token_embeddings.unsqueeze(1) - word_embedding[i,:,:], dim = 2)
+            if self.compress_search_space:
+                dists =  torch.norm(self.compressed_embeddings.unsqueeze(1) - word_embedding[i,:,:], dim = 2)
+            else:
+                dists =  torch.norm(self.all_token_embeddings.unsqueeze(1) - word_embedding[i,:,:], dim = 2)
             closest_tokens = torch.argmin(dists, axis = 0)
             closest_tokens = torch.tensor([self.all_token_idxs[token] for token in closest_tokens]).to(self.torch_device)
             closest_vocab = self.tokenizer.decode(closest_tokens)

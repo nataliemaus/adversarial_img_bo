@@ -162,6 +162,7 @@ def optimize(args):
         prepend_to_text=args.prepend_to_text,
         optimal_class=args.optimal_class,
         visualize=False,
+        compress_search_space=args.compress_search_space,
     )
     tr = TrustRegionState(dim=objective.dim)
     assert objective.dim == args.n_tokens*768 
@@ -239,23 +240,24 @@ if __name__ == "__main__":
     parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)") 
     parser.add_argument('--avg_over_N_latents', type=int, default=5) 
     parser.add_argument('--more_hdims', type=bool, default=True) # for >8 tokens only 
-    ## modify... 
-    parser.add_argument('--exclude_all_related_prompts', type=bool, default=False)  
-    parser.add_argument('--exclude_some_related_prompts', type=bool, default=True)  
+    ## modify...  
     parser.add_argument('--seed', type=int, default=1 ) 
     parser.add_argument('--bsz', type=int, default=10)  
     parser.add_argument('--prepend_to_text', default="a picture of a dog") 
-    parser.add_argument('--optimal_class', default="all" )  
     parser.add_argument('--break_after_success', type=bool, default=True )
-    parser.add_argument('--max_n_calls', type=int, default=15_000) 
+    parser.add_argument('--max_n_calls', type=int, default=20_000) 
     parser.add_argument('--success_value', type=int, default=-1)  
     parser.add_argument('--n_addtional_evals', type=int, default=3_000) 
     # fr
+    parser.add_argument('--exclude_some_related_prompts', type=bool, default=True) 
     parser.add_argument('--n_tokens', type=int, default=6 )  
     # only 
+    parser.add_argument('--exclude_all_related_prompts', type=bool, default=False)  
+    parser.add_argument('--optimal_class', default="all" )  
     parser.add_argument('--prepend_task', type=bool, default=False)
     parser.add_argument('--start_ix', type=int, default=0 ) # start and stop imnet 
     parser.add_argument('--stop_ix', type=int, default=100 ) # start and stop imnet 
+    parser.add_argument('--compress_search_space', type=bool, default=False )
     args = parser.parse_args() 
 
     if args.optimal_class == "all":
@@ -278,11 +280,13 @@ if __name__ == "__main__":
 
     # Allegro 
     # tmux attach -t adv adv2, adv7 
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 25  --bsz 20
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 0 --stop_ix 25  --bsz 20
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 0 --stop_ix 25  --bsz 20
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 4 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --prepend_task True --bsz 20
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --prepend_task True --bsz 20
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 8 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --prepend_task True --bsz 20
 
-    # Up Next::: ,    conda activate adv_env      pip install nltk
+
+    # RUNNING:::: ,    conda activate adv_env      
+    # pip install nltk
     # gauss node 1, tmux attach -t adv0, 1, 2, 3, ..., 8
     # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 7 
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 7 --stop_ix 14 
@@ -298,5 +302,5 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 70 --stop_ix 77 
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 77 --stop_ix 84 
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 84 --stop_ix 92 
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 92 --stop_ix 10 
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 92 --stop_ix 200 
     ## !! 14 !! 
