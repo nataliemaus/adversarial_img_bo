@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from torch.quasirandom import SobolEngine
 from botorch.acquisition import qExpectedImprovement
 from botorch.optim import optimize_acqf
-from botorch.generation import MaxPosteriorSampling 
+try:
+    from botorch.generation import MaxPosteriorSampling 
+except:
+    from .bo_torch_sampling import MaxPosteriorSampling 
 from typing import Any
 # based on TuRBO State from BoTorch
 
