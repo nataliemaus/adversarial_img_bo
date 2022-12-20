@@ -24,7 +24,7 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.objective import (
     IdentityMCObjective,
     MCAcquisitionObjective,
-    PosteriorTransform,
+    # PosteriorTransform,
     ScalarizedPosteriorTransform,
 )
 from botorch.generation.utils import _flip_sub_unique
@@ -76,7 +76,7 @@ class MaxPosteriorSampling(SamplingStrategy):
         self,
         model: Model,
         objective: Optional[MCAcquisitionObjective] = None,
-        posterior_transform: Optional[PosteriorTransform] = None,
+        posterior_transform = None,
         replacement: bool = True,
     ) -> None:
         r"""Constructor for the SamplingStrategy base class.
@@ -268,7 +268,8 @@ class ConstrainedMaxPosteriorSampling(MaxPosteriorSampling):
         model: Model,
         constraint_model: Union[ModelListGP, MultiTaskGP],
         objective: Optional[MCAcquisitionObjective] = None,
-        posterior_transform: Optional[PosteriorTransform] = None,
+        # posterior_transform: Optional[PosteriorTransform] = None,
+        posterior_transform = None,
         replacement: bool = True,
         minimize_constraints_only: bool = False,
     ) -> None:
