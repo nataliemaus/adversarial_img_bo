@@ -14,7 +14,7 @@ points across the q-batch are considered jointly for sampling (where as for
 q-acquisition functions we evaluate the joint value of the q-batch).
 """
 
-from __future__ import annotations
+# from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Union
