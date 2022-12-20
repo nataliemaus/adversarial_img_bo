@@ -486,13 +486,11 @@ class AdversarialsObjective(Objective):
         if self.compress_search_space:
             tmp = []
             for x in word_embeddings:
-                import pdb 
-                pdb.set_trace() 
                 tmp.append(self.ae.encoder(x.float()))
+            import pdb 
+            pdb.set_trace() 
             word_embeddings = torch.cat(tmp, 0).to(torch.float16)
-        
-        import pdb 
-        pdb.set_trace() 
+
         return word_embeddings
         # outputs = self.pipeline(input_type = "word_embedding",
         #                 input_value = word_embeddings,
