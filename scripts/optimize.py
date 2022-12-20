@@ -1,6 +1,7 @@
 
 import torch
 import gpytorch
+import numpy as np 
 import sys 
 sys.path.append("../")
 from gpytorch.mlls import PredictiveLogLikelihood 
@@ -114,6 +115,14 @@ def save_stuff(args, X, Y, P, objective, tracker):
     if objective.project_back: 
         best_prompt = P[Y.argmax()]
         tracker.log({"best_prompt":best_prompt}) 
+    save_path = f"../best_xs/{wandb.run.name}-all-data.csv"
+    prompts_arr = np.array(P)
+    loss_arr = Y.squeeze().detach().cpu().numpy() 
+    df = pd.DataFrame() 
+    df['prompt'] = prompts_arr
+    df["loss"] = loss_arr 
+    df.to_csv(save_path, index=None)
+
     if False:
         pass_in_x = torch.cat([best_x.unsqueeze(0)]*args.bsz)
         imgs, xs, y = objective.query_oracle(pass_in_x, return_img=True)
@@ -257,45 +266,37 @@ if __name__ == "__main__":
             optimize(args) 
     else:
         optimize(args)
-    
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 0 --stop_ix 25 
-
-
-
-
-    # python3 --prepend_task True --n_tokens 3 
-
     # pip install diffusers
     # pip install accelerate 
     #  conda activate lolbo_mols
     # tmux attach -t adv 
-
+    # moving xs from desktop to jkgardner: 
+    # rsync -a --ignore-existing best_xs jkgardner.com:/home/nmaus/adversarial_img_bo/
     # conda create --name adv_env --file adv_env.txt
     # conda activate adv_env
-    # gauss node 2! 
-    # tmux attach -t adv1 , adv2, adv3, adv4
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 12 --prepend_task True
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 6 --prepend_task True
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 14 --prepend_task True
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 7 --prepend_task True
+
 
     # Allegro 
     # tmux attach -t adv adv2, adv7 
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 20 --prepend_task True --bsz 20
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 16 --prepend_task True --bsz 20
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 12 --prepend_task True --bsz 20
-
-    # moving xs from desktop to jkgardner: 
-    # rsync -a --ignore-existing best_xs jkgardner.com:/home/nmaus/adversarial_img_bo/
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 25  --bsz 20
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 0 --stop_ix 25  --bsz 20
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 0 --stop_ix 25  --bsz 20
 
     # Up Next::: ,    conda activate adv_env
-    # gauss node 1, tmux attach -t adv10, adv11, adv12, adv13, adv14
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 8 --bsz 10 --seed 1 --optimal_class violin 
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class violin 
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --bsz 10 --seed 1 --optimal_class violin --prepend_task True
-    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --n_tokens 4 --bsz 10 --seed 1 --optimal_class violin --prepend_task True 
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 4 --bsz 10 --seed 1 --optimal_class violin 
-    # gauss node 2, tmux attach -t adv5 
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --n_tokens 12 --bsz 2 --seed 1 --optimal_class car --prepend_task True 
-
-    
+    # gauss node 1, tmux attach -t adv0, 1, 2, 3, ..., 8
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --start_ix 0 --stop_ix 25  
+    # gauss node 2, tmux attach -t adv21 , adv22, adv23, adv24, adv29
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 0 --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 0 --stop_ix 25 
+    ## !! 14 !! 
