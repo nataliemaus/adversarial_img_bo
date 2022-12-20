@@ -1,5 +1,6 @@
 import nltk 
 nltk.download('omw-1.4')
+nltk.download('wordnet')
 from nltk.corpus import wordnet
 
 def get_synonyms(word):
