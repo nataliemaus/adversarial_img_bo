@@ -7,7 +7,6 @@ sys.path.append("../")
 from gpytorch.mlls import PredictiveLogLikelihood 
 from utils.bo_utils.trust_region import TrustRegionState, generate_batch, update_state
 from utils.bo_utils.ppgpr import GPModelDKL 
-from utils.get_synonyms import get_synonyms
 from torch.utils.data import TensorDataset, DataLoader
 from utils.adversarial_objective import AdversarialsObjective  
 import argparse 
@@ -259,6 +258,9 @@ if __name__ == "__main__":
     parser.add_argument('--compress_search_space', type=bool, default=False )
     args = parser.parse_args() 
 
+    if args.compress_search_space:
+        args.hidden_dims = tuple_type("(64,64,32)") 
+
     if args.optimal_class == "all":
         imagenet_dict = load_imagenet()
         classes = list(imagenet_dict.keys())  # 583 
@@ -275,18 +277,19 @@ if __name__ == "__main__":
     # rsync -a --ignore-existing best_xs jkgardner.com:/home/nmaus/adversarial_img_bo/
     # conda create --name adv_env --file adv_env.txt
     # conda activate adv_env
+    # pip install nltk
 
+
+    # RUNNING:::::::  
 
     # Allegro 
-    # tmux attach -t adv adv2, adv7 
+    #   tmux attach -t adv adv2, adv7 
     # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 4 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --prepend_task True --bsz 20
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --prepend_task True --bsz 20
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 8 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --prepend_task True --bsz 20
-
-
-    # RUNNING:::: ,    conda activate adv_env      
-    # pip install nltk
-    # gauss node 1, tmux attach -t adv0, 1, 2, 3, ..., 8
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --bsz 20
+    
+    # gauss node 1, 
+    #   tmux attach -t adv0, 1, 2, 3, ..., 8
     # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 7 
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 7 --stop_ix 14 
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 14 --stop_ix 21 
@@ -296,10 +299,14 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 42 --stop_ix 49 
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 49 --stop_ix 56 
     # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --start_ix 56 --stop_ix 63  
-    # gauss node 2, tmux attach -t adv21 , adv22, adv23, adv24, adv29
+    # gauss node 2, 
+    #   tmux attach -t adv21 , adv22, adv23, adv24, adv29
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 63 --stop_ix 70 
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 70 --stop_ix 77 
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 77 --stop_ix 84 
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 84 --stop_ix 92 
     # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 92 --stop_ix 200 
-    ## !! 14 !! 
+    # gauss node 3, (careful)
+    #   tmux attach -t adv7 adv6 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class car --prepend_task True --bsz 10
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class car --bsz 10
