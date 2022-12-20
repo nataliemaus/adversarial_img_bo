@@ -153,8 +153,10 @@ class AdversarialsObjective(Objective):
             self.ae = self.ae.cuda() 
             self.compressed_embeddings = self.ae.encoder(self.all_token_embeddings.float()).to(torch.float16)
             # torch.Size([49408, 768]) --> torch.Size([49407, 24])
-            self.latent_dim = self.compressed_embeddings.shape[-1] 
-            self.dim = self.n_tokens*self.latent_dim
+            self.search_space_dim = self.compressed_embeddings.shape[-1] 
+            self.dim = self.n_tokens*self.search_space_dim
+        else:
+            self.search_space_dim = 768 
 
     def get_non_related_values(self):
         tmp = [] 
@@ -421,7 +423,7 @@ class AdversarialsObjective(Objective):
         if not torch.is_tensor(x):
             x = torch.tensor(x, dtype=torch.float16)
         x = x.cuda() 
-        x = x.reshape(-1, self.n_tokens, 768) 
+        x = x.reshape(-1, self.n_tokens, self.search_space_dim) 
         out_types = ["loss"]
         if return_img:
             out_types = ["image", "loss"]
