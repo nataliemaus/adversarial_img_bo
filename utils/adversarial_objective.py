@@ -142,13 +142,9 @@ class AdversarialsObjective(Objective):
         self.all_token_embeddings = self.word_embedder(torch.tensor(self.all_token_idxs).to(self.torch_device)) 
 
         if self.compress_search_space:
-            # latent_dim_dict = {} 
-            # latent_dim_dict[24] = ["devout-firebrand-15", 5]
-            # wandb run name, num layers 
-            # latent_dim_dict[dim] = ["devout-firebrand-15", 5]
-            # latent_dim_dict[dim] = ["devout-firebrand-15", 5]
-            n_layers = 5
-            load_ckpt_wandb_name = "devout-firebrand-15"
+            # v2 (5 layers --> poor preformance! )
+            n_layers = 4
+            load_ckpt_wandb_name = "laced-snow-14"
             self.ae = AE(
                 input_shape=768,
                 n_layers=n_layers,
@@ -375,7 +371,6 @@ class AdversarialsObjective(Objective):
 
         valid_input_types = ['prompt', 'word_embedding', 'CLIP_embedding', 'image']
         valid_output_types = ['tokens', 'word_embedding', 'processed_word_embedding', 'CLIP_embedding', 'image', 'loss']
-        # Check that types are valid
         if input_type not in valid_input_types:
             raise ValueError(f"input_type must be one of {valid_input_types} but was {input_type}")
         for cur_output_type in output_types:

@@ -25,6 +25,7 @@ def test_prompt(args, prompt, use_fixed_latents):
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
         optimal_class=args.optimal_class,  
+        remove_synonyms=args.remove_synonyms,
     ) 
     if not use_fixed_latents:
         for i in range(10):
@@ -94,7 +95,8 @@ def visualizev2(args):
         visualize=True,
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
-        optimal_class=args.optimal_class,   
+        optimal_class=args.optimal_class, 
+        remove_synonyms=args.remove_synonyms,  
     )
     if args.wandb_run_name == "random":
         best_x = torch.randn(1, objective.dim)
@@ -127,6 +129,7 @@ def test_particular_prompt(args):
         seed=args.seed,
         prepend_to_text=args.prepend_to_text,
         optimal_class=args.optimal_class,  
+        remove_synonyms=args.remove_synonyms,
     ) 
     if args.prepend_to_text:
         prompt = [args.prompt + " " + args.prepend_to_text + " <|endoftext|>" ]
@@ -145,16 +148,18 @@ def test_particular_prompt(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
-    parser.add_argument('--exclude_all_related_prompts', type=bool, default=False ) 
+    parser.add_argument('--exclude_all_related_prompts', type=bool, default=True ) 
     parser.add_argument('--exclude_some_related_prompts', type=bool, default=False ) 
     parser.add_argument('--N_latents', type=int, default=20 )   # N imagges
-    parser.add_argument('--seed', type=int, default=2 )   
+    parser.add_argument('--seed', type=int, default=3 )   
     parser.add_argument('--prompt', default="" )   # use exact prompt instead? 
     parser.add_argument('--prepend_to_text', default="a picture of a dog")
     parser.add_argument('--prepend_task', type=bool, default=True)
     parser.add_argument('--n_tokens', type=int, default=6 ) 
     parser.add_argument('--wandb_run_name', default="daily-plasma-183" ) 
     parser.add_argument('--optimal_class', default="car")
+    parser.add_argument('--remove_synonyms', type=bool, default=False)
+
     args = parser.parse_args() 
     if not args.prepend_task: # if default task, prepend_to_text = ""
         args.prepend_to_text = ""

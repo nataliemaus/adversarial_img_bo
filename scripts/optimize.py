@@ -255,6 +255,8 @@ if __name__ == "__main__":
     parser.add_argument('--exclude_some_related_prompts', type=bool, default=False) 
     parser.add_argument('--remove_synonyms', type=bool, default=False) # removingg some --> remove synonyms? 
     parser.add_argument('--n_tokens', type=int, default=4 )  
+    parser.add_argument('--compression_version', type=int, default=2)   # 2 == "laced-snow-14" 
+    # 
     # only 
     parser.add_argument('--exclude_all_related_prompts', type=bool, default=False)  
     parser.add_argument('--optimal_class', default="all" )  
@@ -262,6 +264,7 @@ if __name__ == "__main__":
     parser.add_argument('--start_ix', type=int, default=0 ) # start and stop imnet 
     parser.add_argument('--stop_ix', type=int, default=100 ) # start and stop imnet 
     parser.add_argument('--compress_search_space', type=bool, default=False )
+
     args = parser.parse_args() 
 
     if args.compress_search_space:
@@ -299,7 +302,7 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --prepend_task True --bsz 20
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --bsz 20
 
-    # gauss node 1, 
+    # gauss node 1,      conda activate adv_env   (no more exclusion at all, and down to 4 tokens instead of 6)
     #   tmux attach -t adv0, 1, 2, 3, ..., 8
     # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 7 
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 7 --stop_ix 14 
@@ -316,8 +319,8 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 70 --stop_ix 77 
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 77 --stop_ix 84 
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 84 --stop_ix 92 
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 92 --stop_ix 200 
-    # gauss node 3, (careful)
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 92 --stop_ix 200 --bsz 5
+    # gauss node 3, (careful) 
     #   tmux attach -t adv7 adv6 
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class car --prepend_task True --bsz 10
     # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class car --bsz 10

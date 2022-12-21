@@ -7,6 +7,7 @@ __pycache__/*
 *.csv
 ae_models/*.pkl 
 !ae_models/devout-firebrand-15.pkl  
+!ae_models/laced-snow-14.pkl  
 nltk_data/
 nltk_data/*
 corpora/
