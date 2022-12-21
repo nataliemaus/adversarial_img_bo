@@ -50,11 +50,12 @@ def save_stuff(X, Y, P, G, tracker):
     save_path = f"../best_xs/{wandb.run.name}-all-data.csv"
     prompts_arr = np.array(P)
     loss_arr = Y.squeeze().detach().cpu().numpy() 
-    gen_text_arr = np.array(G)
+    gen_text_arr = np.array(G)  # (10, 5)  = N, n_gen_text 
     df = pd.DataFrame() 
     df['prompt'] = prompts_arr
     df["loss"] = loss_arr 
-    df["gen_text"] = gen_text_arr
+    for i in range(gen_text_arr.shape[-1]): 
+        df[f"gen_text{i+1}"] = gen_text_arr[:,i] 
     df.to_csv(save_path, index=None)
 
 def optimize(args):
@@ -140,7 +141,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
     parser.add_argument('--work_dir', default='/home/nmaus/' ) 
     parser.add_argument('--wandb_entity', default="nmaus" ) 
-    parser.add_argument('--wandb_project_name', default="adversarial-bo" )  
+    parser.add_argument('--wandb_project_name', default="adversarial-bo-txt" )  
     parser.add_argument('--n_init_pts', type=int, default=1100) 
     parser.add_argument('--lr', type=float, default=0.01 ) 
     parser.add_argument('--n_epochs', type=int, default=2)  
@@ -164,7 +165,7 @@ if __name__ == "__main__":
     parser.add_argument('--prepend_task', type=bool, default=False)
     parser.add_argument('--compress_search_space', type=bool, default=False )
     parser.add_argument('--num_gen_seq', type=int, default=5 ) 
-    parser.add_argument('--max_gen_length', type=int, default=20 ) 
+    parser.add_argument('--max_gen_length', type=int, default=10 ) 
     parser.add_argument('--dist_metric', default="sq_euclidean" ) 
     args = parser.parse_args() 
 
@@ -183,5 +184,5 @@ if __name__ == "__main__":
     # pip install nltk 
     # RUNNING:::::::  
 
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize_text.py --n_tokens 4
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize_text.py --n_tokens 5 --bsz 10 
 

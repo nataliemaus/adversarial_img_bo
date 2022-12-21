@@ -98,7 +98,7 @@ def get_init_data(args, prompts, objective):
     for i in range(n_batches): 
         prompt_batch = prompts[i*args.bsz:(i+1)*args.bsz] 
         X = objective.get_init_word_embeddings(prompt_batch) 
-        X = X.detach().cpu()  
+        X = X.detach().cpu() 
         X = X.reshape(args.bsz, objective.dim ) 
         for j in range(10): # 10 randoms near each prompt ! 
             if j > 0:
@@ -230,7 +230,7 @@ if __name__ == "__main__":
     parser.add_argument('--work_dir', default='/home/nmaus/' ) 
     parser.add_argument('--wandb_entity', default="nmaus" ) 
     parser.add_argument('--wandb_project_name', default="adversarial-bo" )  
-    parser.add_argument('--n_init_pts', type=int, default=1100) 
+    parser.add_argument('--n_init_pts', type=int, default=1200) 
     parser.add_argument('--lr', type=float, default=0.01 ) 
     parser.add_argument('--n_epochs', type=int, default=2)  
     parser.add_argument('--version', type=int, default=4)  
@@ -293,8 +293,10 @@ if __name__ == "__main__":
     # ERIC MACHINE: ... ??? 
     #   tmux attach -t adv, adv1, adv2, adv3, ..., adv8
     #   source env/bin/activate   , cd adversarial_... 
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class violin --prepend_task True --bsz 20
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class violin --bsz 20
+    # XXX
+
+    # LOCUST! 
+    #   tmux attach -t adv, adv1, adv2, adv3, ..., adv8
     # XXX
 
     # Allegro 

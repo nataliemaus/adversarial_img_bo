@@ -134,7 +134,7 @@ class AdversarialsTextGenObjective(Objective):
             loss = torch.log(probs[:,0])
         else:
             raise ValueError(f"loss_type must be one of ['log_prob_pos', 'log_prob_neg'] but was {loss_type}")
-        loss = loss.reshape(num_prompts, -1)
+        loss = loss.reshape(num_prompts, -1) 
         return loss 
         
     def pipe(self, input_type, input_value, output_types):
@@ -238,4 +238,3 @@ if __name__ == "__main__":
     obj = AdversarialsTextGenObjective() 
     x = torch.randn(10, 1*768, dtype=torch.float16)*0.01
     x, y, gen_text  = obj(x)  # torch.Size([10]) == bsz 
-
