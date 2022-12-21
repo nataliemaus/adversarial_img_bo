@@ -13,7 +13,6 @@ class AdversarialsTextGenObjective(Objective):
         n_tokens=1,
         minimize=True,
         batch_size=10,
-        project_back=True, 
         visualize=False,
         compress_search_space=False,
         prepend_to_text="",
@@ -33,8 +32,6 @@ class AdversarialsTextGenObjective(Objective):
 
         assert dist_metric in ['cosine_sim', "sq_euclidean"]
         self.prepend_to_text = prepend_to_text
-        if self.prepend_to_text:
-            assert project_back
         self.N_extra_prepend_tokens = len(self.prepend_to_text.split() )
         self.dist_metric = dist_metric # metric='cosine_sim'
         self.torch_device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -59,7 +56,6 @@ class AdversarialsTextGenObjective(Objective):
 
         self.compress_search_space = compress_search_space
         self.visualize = visualize # flag to print individual tokens
-        self.project_back = project_back
         # self.token = "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" 
         self.n_tokens = n_tokens
         self.minmize = minimize 
@@ -119,10 +115,8 @@ class AdversarialsTextGenObjective(Objective):
 
         return proj_tokens
 
-    def prompt_to_text(self, prompt):
-        gen_texts = self.generator(prompt, max_length=self.max_gen_length, 
-            num_return_sequences=self.num_gen_seq, 
-            num_beams = self.num_gen_seq)
+    def prompt_to_text(self, prompts):
+        gen_texts = self.generator( prompts, max_length=self.max_gen_length, num_return_sequences=self.num_gen_seq, num_beams = self.num_gen_seq)
         gen_texts = [[cur_dict['generated_text'] for cur_dict in cur_gen] for cur_gen in gen_texts]
         return gen_texts
         
@@ -155,8 +149,8 @@ class AdversarialsTextGenObjective(Objective):
         # Check that output is downstream
         pipeline_order = ["raw_word_embedding", "prompt", "generated_text","loss"]
         pipeline_maps = {"raw_word_embedding": self.proj_word_embedding,
-                        "prompt": self.prompt_to_text,
-                        "generated_text": self.text_to_loss,
+                        "prompt": self.prompt_to_text, # prompt to generated text 
+                        "generated_text": self.text_to_loss, # text to generated loss 
                         }
 
         start_index = pipeline_order.index(input_type)
@@ -179,7 +173,6 @@ class AdversarialsTextGenObjective(Objective):
         for i in range(start_index, max_end_index):
             cur_type = pipeline_order[i]
             mapping = pipeline_maps[cur_type]
-            
             cur_pipe_val = mapping(cur_pipe_val)
             next_type = pipeline_order[i+1]
             if next_type in output_types:
@@ -191,43 +184,15 @@ class AdversarialsTextGenObjective(Objective):
             x = torch.tensor(x, dtype=torch.float16)
         x = x.cuda() 
         x = x.reshape(-1, self.n_tokens, self.search_space_dim) 
-        out_types = ["generated_text", "loss"]
-        input_type = "raw_word_embedding"
-        if self.project_back:
-            x = self.proj_word_embedding(x)
-            input_type = "prompt" 
-            x = [x1[0] for x1 in x] 
-
         out_dict = self.pipe(
-            input_type=input_type,
+            input_type="raw_word_embedding", 
             input_value=x, 
-            output_types=out_types,
+            output_types=['prompt','generated_text','loss'] 
         ) 
-        y = out_dict['loss']
-        y = y.mean(-1 ) # bsz x n_gen_seq --> (bsz, 1)
-        gen_text = out_dict["generated_text"]
+        y = out_dict['loss'].mean(-1 ) 
         if self.minmize: 
             y = y*-1 
-        return x, y, gen_text 
-    
-    def get_init_word_embeddings(self, prompts):
-        # Word embedding initialization at "cow"
-        # promts = list of words, ie ["cow", "horse", "cat"]
-        word_embeddings =self.pipe(
-            input_type="prompt", 
-            input_value=prompts, 
-            output_types = ["raw_word_embedding"]
-        )["raw_word_embedding"][:,1:-1,:] 
-        if self.N_extra_prepend_tokens > 0:
-            word_embeddings = word_embeddings[:, 0:-self.N_extra_prepend_tokens, :]
-        if self.compress_search_space:
-            tmp = []
-            for x in word_embeddings:
-                tmp.append(self.ae.encoder(x.float()).unsqueeze(0))
-            word_embeddings = torch.cat(tmp, 0).to(torch.float16)
-
-        return word_embeddings
-
+        return out_dict['prompt'], y, out_dict["generated_text"]
 
     def proj_word_embedding(self, word_embedding):
         '''
@@ -252,8 +217,8 @@ class AdversarialsTextGenObjective(Objective):
             closest_vocab = self.tokenizer.decode(closest_tokens)
             if self.prepend_to_text: 
                 closest_vocab = closest_vocab + " " + self.prepend_to_text + " <|endoftext|>" 
-            cur_proj_tokens = [closest_vocab]
-            proj_tokens.append(cur_proj_tokens) 
+            # cur_proj_tokens = [closest_vocab]
+            proj_tokens.append(closest_vocab)  # cur_proj_tokens) 
             if self.visualize: # visualizing 
                 tokenized = ""
                 for ix, token in enumerate(closest_tokens):
@@ -273,7 +238,4 @@ if __name__ == "__main__":
     obj = AdversarialsTextGenObjective() 
     x = torch.randn(10, 1*768, dtype=torch.float16)*0.01
     x, y, gen_text  = obj(x)  # torch.Size([10]) == bsz 
-    # x, y, gen_text 
-    # x = list of len 10 = [' 35', ' 300', ' Michael', ' 300', ' John', ' 300', ' David', ' 40', ' 300', ' 300']
-    # gen_text = list of len 10 (bsz), each element is a list of len 10 (n gen)! = [ ['some text', 'other text', ... ], ...  ]
-    # y = 10, tensor = (bsz,)
+

@@ -29,6 +29,7 @@ class AdversarialsObjective(Objective):
         prepend_to_text="",
         optimal_class="cat",
         seed=1,
+        remove_synonyms=False,
         **kwargs,
     ):
         super().__init__(
@@ -43,6 +44,7 @@ class AdversarialsObjective(Objective):
         # if prepend_to_text is not "", we will prepend the adversairla prompt to the text
         # ie prepend_to_text = "a picture of a dog"
         self.prepend_to_text = prepend_to_text 
+        self.remove_synonyms = remove_synonyms
         # if self.prepend_to_text:
         #     self.prepend_to_text = self.prepend_to_text + " <|endoftext|>" 
         self.N_extra_prepend_tokens = len(self.prepend_to_text.split() )
@@ -125,14 +127,18 @@ class AdversarialsObjective(Objective):
         if self.exclude_all_related_prompts or self.exclude_some_related_prompts:
             # if only exlucde some (optimal class name, optimal class name +s, 
             #   anything containg optimal class name)
-            related_vocab = get_synonyms(self.optimal_class) + [self.optimal_class]
-            related_vocab_s = [word + "s" for word in related_vocab]
-            self.related_vocab = related_vocab + related_vocab_s 
+            if self.remove_synonyms:
+                related_vocab = get_synonyms(self.optimal_class) + [self.optimal_class]
+                related_vocab_s = [word + "s" for word in related_vocab]
+                self.related_vocab = related_vocab + related_vocab_s 
+            else:
+                self.related_vocab = [self.optimal_class, self.optimal_class+"s"]
             if self.exclude_all_related_prompts: # cat, car or violin only prepped 
                 self.related_vocab = RELATED_VOCAB_DICT[self.optimal_class]
             self.all_token_idxs = self.get_non_related_values() 
         else:
             self.all_token_idxs = list(self.vocab.values())
+            self.related_vocab = []
         self.all_token_embeddings = self.word_embedder(torch.tensor(self.all_token_idxs).to(self.torch_device)) 
 
         if self.compress_search_space:

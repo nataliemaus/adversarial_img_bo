@@ -66,23 +66,25 @@ def update_surr_model(
 
 def get_init_prompts(args, objective ):
     related_vocab = objective.related_vocab
-    imagenet_dict = load_imagenet()
-    single_token_prompts = list(imagenet_dict.keys())  # 583 
-    tmp = []
-    for vocab_word in single_token_prompts:
+    all_vocab = list(objective.vocab.keys()) 
+    random.shuffle(all_vocab)
+    starter_vocab = all_vocab[0:100]
+    tmp = [] 
+    for vocab_word in starter_vocab:
         if not vocab_word in related_vocab:
             tmp.append(vocab_word)
-    single_token_prompts = tmp 
+    starter_vocab = tmp 
     N = args.n_tokens - 1
     if args.prepend_to_text:
         N = args.n_tokens 
     prompts = [] 
-    for i in range(args.n_init_pts):
+    iters = math.ceil(args.n_init_pts/10)
+    for i in range(iters):
         prompt = ""
         for j in range(N):
             if j > 0: 
                 prompt += " "
-            prompt += random.choice(single_token_prompts)
+            prompt += random.choice(starter_vocab)
         prompts.append(prompt)
 
     return prompts 
@@ -92,17 +94,19 @@ def get_init_data(args, prompts, objective):
     XS = [] 
     PS = []
     # if do batches of more than 10, get OOM 
-    n_batches = math.ceil(args.n_init_pts / args.bsz) 
+    n_batches = math.ceil(args.n_init_pts / (args.bsz*10)) 
     for i in range(n_batches): 
         prompt_batch = prompts[i*args.bsz:(i+1)*args.bsz] 
         X = objective.get_init_word_embeddings(prompt_batch) 
         X = X.detach().cpu()  
         X = X.reshape(args.bsz, objective.dim ) 
-        XS.append(X)   
-        print(X.shape) 
-        xs, ys = objective(X.to(torch.float16))
-        YS.append(ys) 
-        PS = PS + xs 
+        for j in range(10): # 10 randoms near each prompt ! 
+            if j > 0:
+                X = X + torch.randn(args.bsz, objective.dim)*0.01
+            XS.append(X)   
+            xs, ys = objective(X.to(torch.float16))
+            YS.append(ys) 
+            PS = PS + xs 
     Y = torch.cat(YS).detach().cpu() 
     X = torch.cat(XS).float().detach().cpu() 
     Y = Y.unsqueeze(-1)  
@@ -162,6 +166,7 @@ def optimize(args):
         optimal_class=args.optimal_class,
         visualize=False,
         compress_search_space=args.compress_search_space,
+        remove_synonyms=args.remove_synonyms,
     )
     tr = TrustRegionState(dim=objective.dim)
     # random sequence of n_tokens of these is each init prompt 
@@ -246,9 +251,10 @@ if __name__ == "__main__":
     parser.add_argument('--max_n_calls', type=int, default=20_000) 
     parser.add_argument('--success_value', type=int, default=-1)  
     parser.add_argument('--n_addtional_evals', type=int, default=3_000) 
-    # fr
-    parser.add_argument('--exclude_some_related_prompts', type=bool, default=True) 
-    parser.add_argument('--n_tokens', type=int, default=6 )  
+    # frs
+    parser.add_argument('--exclude_some_related_prompts', type=bool, default=False) 
+    parser.add_argument('--remove_synonyms', type=bool, default=False) # removingg some --> remove synonyms? 
+    parser.add_argument('--n_tokens', type=int, default=4 )  
     # only 
     parser.add_argument('--exclude_all_related_prompts', type=bool, default=False)  
     parser.add_argument('--optimal_class', default="all" )  
