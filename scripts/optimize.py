@@ -282,18 +282,17 @@ if __name__ == "__main__":
     # RUNNING:::::::  
 
     # ERIC MACHINE: 
-    #   tmux attach -t adv0, 1, 2, 3, ..., 8
+    #   tmux attach -t adv, adv1, adv2, adv3, ..., adv8
     #   source env/bin/activate   , cd adversarial_... 
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class violin --prepend_task True --bsz 10
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class violin --bsz 10
-
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class violin --prepend_task True --bsz 20
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class violin --bsz 20
 
     # Allegro 
     #   tmux attach -t adv adv2, adv7 
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 4 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --prepend_task True --bsz 20
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --prepend_task True --bsz 20
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 6 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --bsz 20
-    
+
     # gauss node 1, 
     #   tmux attach -t adv0, 1, 2, 3, ..., 8
     # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 7 

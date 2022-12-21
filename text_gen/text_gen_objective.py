@@ -13,9 +13,10 @@ class AdversarialsTextGenObjective(Objective):
         n_tokens=1,
         minimize=True,
         batch_size=10,
-        project_back=True, # project back embedding to closest real tokens
+        project_back=True, 
         visualize=False,
         compress_search_space=False,
+        prepend_to_text="",
         num_gen_seq=5,
         max_gen_length=10,
         dist_metric="sq_euclidean",
@@ -31,6 +32,10 @@ class AdversarialsTextGenObjective(Objective):
         ) 
 
         assert dist_metric in ['cosine_sim', "sq_euclidean"]
+        self.prepend_to_text = prepend_to_text
+        if self.prepend_to_text:
+            assert project_back
+        self.N_extra_prepend_tokens = len(self.prepend_to_text.split() )
         self.dist_metric = dist_metric # metric='cosine_sim'
         self.torch_device = "cuda" if torch.cuda.is_available() else "cpu"
         self.distilBert_tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
@@ -139,11 +144,9 @@ class AdversarialsTextGenObjective(Objective):
         return loss 
         
     def pipe(self, input_type, input_value, output_types):
-
         valid_input_types = ['raw_word_embedding' ,'prompt']
         valid_output_types = ['prompt', 'generated_text', 'loss']
-
-        # Check that types are valid
+        # Check that types are valid 
         if input_type not in valid_input_types:
             raise ValueError(f"input_type must be one of {valid_input_types} but was {input_type}")
         for cur_output_type in output_types:
@@ -215,6 +218,8 @@ class AdversarialsTextGenObjective(Objective):
             input_value=prompts, 
             output_types = ["raw_word_embedding"]
         )["raw_word_embedding"][:,1:-1,:] 
+        if self.N_extra_prepend_tokens > 0:
+            word_embeddings = word_embeddings[:, 0:-self.N_extra_prepend_tokens, :]
         if self.compress_search_space:
             tmp = []
             for x in word_embeddings:
@@ -233,7 +238,7 @@ class AdversarialsTextGenObjective(Objective):
             returns:
                 proj_tokens: (batch_size, max_num_tokens) projected tokens
         '''
-        # Get word embedding of all possible tokens as torch tensor
+        # Get word embeddings of all possible tokens as torch tensor
         proj_tokens = []
         # Iterate through batch_size
         for i in range(word_embedding.shape[0]):
@@ -245,6 +250,8 @@ class AdversarialsTextGenObjective(Objective):
             closest_tokens = torch.argmin(dists, axis = 0)
             closest_tokens = torch.tensor([self.all_token_idxs[token] for token in closest_tokens]).to(self.torch_device)
             closest_vocab = self.tokenizer.decode(closest_tokens)
+            if self.prepend_to_text: 
+                closest_vocab = closest_vocab + " " + self.prepend_to_text + " <|endoftext|>" 
             cur_proj_tokens = [closest_vocab]
             proj_tokens.append(cur_proj_tokens) 
             if self.visualize: # visualizing 
@@ -269,12 +276,4 @@ if __name__ == "__main__":
     # x, y, gen_text 
     # x = list of len 10 = [' 35', ' 300', ' Michael', ' 300', ' John', ' 300', ' David', ' 40', ' 300', ' 300']
     # gen_text = list of len 10 (bsz), each element is a list of len 10 (n gen)! = [ ['some text', 'other text', ... ], ...  ]
-    # y = 10x10 tensor = (bsz, n seqs per)
-    x_ = y 
-    y_ = x
-
-    import pdb 
-    pdb.set_trace() 
-
-    # from html import escape 
-
+    # y = 10, tensor = (bsz,)
