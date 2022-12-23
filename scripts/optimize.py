@@ -303,11 +303,8 @@ if __name__ == "__main__":
     parser.add_argument('--start_ix', type=int, default=0 ) # start and stop imnet 
     parser.add_argument('--stop_ix', type=int, default=100 ) # start and stop imnet 
     parser.add_argument('--compress_search_space', type=bool, default=False )
-
     args = parser.parse_args() 
-    print("ABCDEFG") 
-    import pdb 
-    pdb.set_trace() 
+
     if args.compress_search_space:
         args.hidden_dims = tuple_type("(32,32,16)") 
 
