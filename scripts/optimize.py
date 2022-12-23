@@ -305,6 +305,9 @@ if __name__ == "__main__":
     parser.add_argument('--compress_search_space', type=bool, default=False )
 
     args = parser.parse_args() 
+    print("ABCDEFG") 
+    import pdb 
+    pdb.set_trace() 
     if args.compress_search_space:
         args.hidden_dims = tuple_type("(32,32,16)") 
 
