@@ -15,4 +15,7 @@ RUN pip install pandas
 ENV WANDB_API_KEY=dfa956c5bfb9fa492ebf9adede99093772919518
 
 # docker build -t nmaus/advenv .
-# docker run -v /home/nmaus:/workspace/adv --gpus 0 -it nmaus/advenv
+# dockerd-rootless-setuptool.sh install
+# systemctl --user start docker
+# export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock
+# docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv

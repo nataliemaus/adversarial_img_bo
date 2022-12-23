@@ -184,5 +184,9 @@ if __name__ == "__main__":
     # pip install nltk 
     # RUNNING:::::::  
 
+    # GAUSS NODE3 !!! adv1, adv2, adv6, adv7 
     # CUDA_VISIBLE_DEVICES=1 python3 optimize_text.py --n_tokens 5 --bsz 10 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --n_tokens 6 --bsz 10 
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --n_tokens 4 --bsz 10 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --n_tokens 3 --bsz 10 
 
