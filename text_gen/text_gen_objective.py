@@ -43,9 +43,8 @@ class AdversarialsTextGenObjective(Objective):
         self.model = self.model.to(self.torch_device)
         self.word_embedder = self.model.get_input_embeddings()
         self.vocab = self.tokenizer.get_vocab()
-
         self.num_gen_seq = num_gen_seq
-        self.max_gen_length = max_gen_length + self.n_tokens + self.N_extra_prepend_tokens 
+        self.max_gen_length = max_gen_length + n_tokens + self.N_extra_prepend_tokens 
        
         # Currently not used
         self.all_token_idxs = list(self.vocab.values())
