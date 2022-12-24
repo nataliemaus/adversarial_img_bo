@@ -116,7 +116,14 @@ class AdversarialsTextGenObjective(Objective):
         return proj_tokens
 
     def prompt_to_text(self, prompts):
-        gen_texts = self.generator( prompts, max_length=self.max_gen_length, num_return_sequences=self.num_gen_seq, num_beams = self.num_gen_seq)
+        import pdb 
+        pdb.set_trace() 
+        gen_texts = self.generator( 
+            prompts, 
+            max_length=self.max_gen_length, 
+            num_return_sequences=self.num_gen_seq, 
+            num_beams=self.num_gen_seq
+        )
         gen_texts = [[cur_dict['generated_text'] for cur_dict in cur_gen] for cur_gen in gen_texts]
         return gen_texts
         
