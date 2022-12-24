@@ -162,6 +162,7 @@ class RunTurbo():
             self.args.prepend_to_text = ""
         if (self.args.n_tokens > 8) and self.args.more_hdims: # best cats and cars so far have n_tokens = 4, 6, and 8
             self.args.hidden_dims = tuple_type("(1024,256,128,64)") 
+        self.args.update_state_fix = True 
 
     def call_oracle_and_update_next(self, x_next):
         prompts_next, y_next = self.args.objective(x_next.to(torch.float16))
