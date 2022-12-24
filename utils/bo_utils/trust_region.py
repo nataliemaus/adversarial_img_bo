@@ -37,10 +37,10 @@ def update_state(state, Y_next):
         state.success_counter = 0
         state.failure_counter += len(Y_next) # 1
 
-    if state.success_counter == state.success_tolerance:  # Expand trust region
+    if state.success_counter >= state.success_tolerance:  # Expand trust region
         state.length = min(2.0 * state.length, state.length_max)
         state.success_counter = 0
-    elif state.failure_counter == state.failure_tolerance:  # Shrink trust region
+    elif state.failure_counter >= state.failure_tolerance:  # Shrink trust region
         state.length /= 2.0
         state.failure_counter = 0
 
