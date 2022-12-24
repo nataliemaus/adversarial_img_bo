@@ -157,7 +157,6 @@ class RunTurbo():
             self.args.max_n_calls = 200
             self.args.avg_over_N_latents = 2
             self.args.n_init_per_prompt = 2
-        assert self.args.n_init_pts % self.args.bsz == 0
         if not self.args.prepend_task: 
             self.args.prepend_to_text = ""
         if (self.args.n_tokens > 8) and self.args.more_hdims: # best cats and cars so far have n_tokens = 4, 6, and 8
@@ -167,6 +166,7 @@ class RunTurbo():
         self.args.update_state_fix = True 
         if self.args.n_init_pts is None:
             self.args.n_init_pts = self.args.bsz * self.args.n_init_per_prompt
+        assert self.args.n_init_pts % self.args.bsz == 0
 
     def call_oracle_and_update_next(self, x_next):
         prompts_next, y_next = self.args.objective(x_next.to(torch.float16))
