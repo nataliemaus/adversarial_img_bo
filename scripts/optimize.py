@@ -157,6 +157,8 @@ class RunTurbo():
             self.args.max_n_calls = 200
             self.args.avg_over_N_latents = 2
             self.args.n_init_per_prompt = 2
+        if self.args.n_init_per_prompt is None:
+            self.args.n_init_per_prompt = 10 
         if not self.args.prepend_task: 
             self.args.prepend_to_text = ""
         if (self.args.n_tokens > 8) and self.args.more_hdims: # best cats and cars so far have n_tokens = 4, 6, and 8

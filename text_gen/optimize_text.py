@@ -88,6 +88,7 @@ if __name__ == "__main__":
     parser.add_argument('--work_dir', default='/home/nmaus/' ) 
     parser.add_argument('--wandb_entity', default="nmaus" ) 
     parser.add_argument('--wandb_project_name', default="adversarial-bo-txt" )  
+    parser.add_argument('--n_init_per_prompt', type=int, default=None ) 
     parser.add_argument('--n_init_pts', type=int, default=None) 
     parser.add_argument('--lr', type=float, default=0.01 ) 
     parser.add_argument('--n_epochs', type=int, default=2)  
