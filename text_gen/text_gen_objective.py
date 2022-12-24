@@ -45,7 +45,7 @@ class AdversarialsTextGenObjective(Objective):
         self.vocab = self.tokenizer.get_vocab()
 
         self.num_gen_seq = num_gen_seq
-        self.max_gen_length = max_gen_length
+        self.max_gen_length = max_gen_length + self.n_tokens + self.N_extra_prepend_tokens 
        
         # Currently not used
         self.all_token_idxs = list(self.vocab.values())
@@ -118,12 +118,7 @@ class AdversarialsTextGenObjective(Objective):
     def prompt_to_text(self, prompts):
         import pdb 
         pdb.set_trace() 
-        gen_texts = self.generator( 
-            prompts, 
-            max_length=self.max_gen_length, 
-            num_return_sequences=self.num_gen_seq, 
-            num_beams=self.num_gen_seq
-        )
+        gen_texts = self.generator( prompts, max_length=self.max_gen_length, num_return_sequences=self.num_gen_seq, num_beams=self.num_gen_seq)
         gen_texts = [[cur_dict['generated_text'] for cur_dict in cur_gen] for cur_gen in gen_texts]
         return gen_texts
         
@@ -223,7 +218,7 @@ class AdversarialsTextGenObjective(Objective):
             closest_tokens = torch.tensor([self.all_token_idxs[token] for token in closest_tokens]).to(self.torch_device)
             closest_vocab = self.tokenizer.decode(closest_tokens)
             if self.prepend_to_text: 
-                closest_vocab = closest_vocab + " " + self.prepend_to_text + " <|endoftext|>" 
+                closest_vocab = closest_vocab + " " + self.prepend_to_text
             # cur_proj_tokens = [closest_vocab]
             proj_tokens.append(closest_vocab)  # cur_proj_tokens) 
             if self.visualize: # visualizing 
