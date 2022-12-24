@@ -162,7 +162,11 @@ class RunTurbo():
             self.args.prepend_to_text = ""
         if (self.args.n_tokens > 8) and self.args.more_hdims: # best cats and cars so far have n_tokens = 4, 6, and 8
             self.args.hidden_dims = tuple_type("(1024,256,128,64)") 
+        if self.args.compress_search_space:
+            self.args.hidden_dims = tuple_type("(32,32,16)") 
         self.args.update_state_fix = True 
+        if self.args.n_init_pts is None:
+            self.args.n_init_pts = self.args.bsz * self.args.n_init_per_prompt
 
     def call_oracle_and_update_next(self, x_next):
         prompts_next, y_next = self.args.objective(x_next.to(torch.float16))
@@ -289,6 +293,7 @@ if __name__ == "__main__":
     parser.add_argument('--more_hdims', type=bool, default=True) # for >8 tokens only 
     parser.add_argument('--seed', type=int, default=1 ) 
     #  meh
+    parser.add_argument('--n_init_pts', type=int, default=None) 
     parser.add_argument('--prepend_to_text', default="a picture of a dog") 
     parser.add_argument('--break_after_success', type=bool, default=True )
     parser.add_argument('--success_value', type=int, default=-1)  
@@ -297,7 +302,6 @@ if __name__ == "__main__":
     parser.add_argument('--n_addtional_evals', type=int, default=3_000) 
     parser.add_argument('--compression_version', type=int, default=2) # 2 == "laced-snow-14" 
     ## bsz ...  
-    parser.add_argument('--n_init_pts', type=int, default=200) 
     parser.add_argument('--n_init_per_prompt', type=int, default=10 ) 
     parser.add_argument('--bsz', type=int, default=10)  
     # i.e. --bsz 28 --n_init_pts 280 
@@ -316,8 +320,6 @@ if __name__ == "__main__":
     parser.add_argument('--success_tolerance', type=int, default=10 )  
     args = parser.parse_args() 
 
-    if args.compress_search_space:
-        args.hidden_dims = tuple_type("(32,32,16)") 
 
     if args.optimal_class == "all":
         imagenet_dict = load_imagenet()
@@ -361,14 +363,14 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 2800 --bsz 28
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --optimal_class pug --max_n_calls 40000 --n_init_pts 2800 --bsz 28
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 2800 --bsz 28
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 2800 --bsz 28
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 2800 --bsz 28
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 2800 --bsz 28
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 2800 --bsz 28
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --optimal_class pug --max_n_calls 40000 --n_init_pts 2800 --bsz 28
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
 
 
 
@@ -398,8 +400,8 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 92 --stop_ix 200 --bsz 5
     # gauss node 3, (careful) 
     #   tmux attach -t adv1, adv2, adv6, adv7  (opt text! v2)
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize_text.py --n_tokens 5 --bsz 2 
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --n_tokens 6 --bsz 10 
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize_text.py --n_tokens 3 --prepend_task True --bsz 10 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --n_tokens 4 --prepend_task True --bsz 10 
     # CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --n_tokens 4 --bsz 10 
     # CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --n_tokens 3 --bsz 10 
 

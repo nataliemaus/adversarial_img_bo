@@ -88,7 +88,7 @@ if __name__ == "__main__":
     parser.add_argument('--work_dir', default='/home/nmaus/' ) 
     parser.add_argument('--wandb_entity', default="nmaus" ) 
     parser.add_argument('--wandb_project_name', default="adversarial-bo-txt" )  
-    parser.add_argument('--n_init_pts', type=int, default=1100) 
+    parser.add_argument('--n_init_pts', type=int, default=None) 
     parser.add_argument('--lr', type=float, default=0.01 ) 
     parser.add_argument('--n_epochs', type=int, default=2)  
     parser.add_argument('--init_n_epochs', type=int, default=80) 
@@ -98,28 +98,24 @@ if __name__ == "__main__":
     parser.add_argument('--task', default="textgen") 
     parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)") 
     parser.add_argument('--more_hdims', type=bool, default=True) # for >8 tokens only 
-    ## modify...  
     parser.add_argument('--seed', type=int, default=1 ) 
-    parser.add_argument('--bsz', type=int, default=10)  
     parser.add_argument('--prepend_to_text', default="I am happy") 
-    parser.add_argument('--break_after_success', type=bool, default=False)
-    parser.add_argument('--max_n_calls', type=int, default=100_000) 
-    parser.add_argument('--success_value', type=int, default=-1)  
-    parser.add_argument('--n_addtional_evals', type=int, default=3_000) 
-    # fr
-    parser.add_argument('--n_tokens', type=int, default=6 )  
-    parser.add_argument('--prepend_task', type=bool, default=False)
-    parser.add_argument('--compress_search_space', type=bool, default=False )
+    parser.add_argument('--success_value', type=int, default=8)  
+    parser.add_argument('--break_after_success', type=bool, default=True)
+    ## meh  
+    parser.add_argument('--max_n_calls', type=int, default=40_000) 
+    parser.add_argument('--n_addtional_evals', type=int, default=1_000) # evals afteer success
     parser.add_argument('--num_gen_seq', type=int, default=5 ) 
     parser.add_argument('--max_gen_length', type=int, default=10 ) 
-    parser.add_argument('--dist_metric', default="sq_euclidean" ) 
-
+    parser.add_argument('--dist_metric', default="sq_euclidean" )  
+    parser.add_argument('--compress_search_space', type=bool, default=False )
+     ## modify...  
+    parser.add_argument('--bsz', type=int, default=10)  
+    parser.add_argument('--n_tokens', type=int, default=6 )  
+    parser.add_argument('--prepend_task', type=bool, default=False)
     parser.add_argument('--failure_tolerance', type=int, default=10 )  
     parser.add_argument('--success_tolerance', type=int, default=10 )  
     args = parser.parse_args() 
-
-    if args.compress_search_space:
-        args.hidden_dims = tuple_type("(64,64,32)") 
 
     runner = OptimizeText(args)
     runner.optimize() 
