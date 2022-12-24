@@ -166,6 +166,7 @@ class RunTurbo():
         if self.args.compress_search_space:
             self.args.hidden_dims = tuple_type("(32,32,16)") 
         self.args.update_state_fix = True 
+        self.args.update_state_fix2 = True 
         if self.args.n_init_pts is None:
             self.args.n_init_pts = self.args.bsz * self.args.n_init_per_prompt
         assert self.args.n_init_pts % self.args.bsz == 0
