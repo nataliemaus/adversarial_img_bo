@@ -113,6 +113,9 @@ if __name__ == "__main__":
     parser.add_argument('--num_gen_seq', type=int, default=5 ) 
     parser.add_argument('--max_gen_length', type=int, default=10 ) 
     parser.add_argument('--dist_metric', default="sq_euclidean" ) 
+
+    parser.add_argument('--failure_tolerance', type=int, default=10 )  
+    parser.add_argument('--success_tolerance', type=int, default=10 )  
     args = parser.parse_args() 
 
     if args.compress_search_space:

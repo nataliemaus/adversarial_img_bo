@@ -204,7 +204,11 @@ class RunTurbo():
         )
         prev_best = -torch.inf 
         num_tr_restarts = 0 
-        tr = TrustRegionState(dim=self.args.objective.dim)
+        tr = TrustRegionState(
+            dim=self.args.objective.dim,
+            failure_tolerance=self.args.failure_tolerance,
+            success_tolerance=self.args.success_tolerance,
+        )
         while self.args.objective.num_calls < self.args.max_n_calls:
             tracker.log({
                 'num_calls':self.args.objective.num_calls,
@@ -234,10 +238,14 @@ class RunTurbo():
             y_next = self.call_oracle_and_update_next(x_next)
             y_next = y_next.unsqueeze(-1)
             self.args.Y = torch.cat((self.args.Y, y_next.detach().cpu()), dim=-2) 
-            update_state(tr, y_next) 
+            tr = update_state(tr, y_next) 
             if tr.restart_triggered:
                 num_tr_restarts += 1
-                tr = TrustRegionState(dim=self.args.objective.dim)
+                tr = TrustRegionState(
+                    dim=self.args.objective.dim,
+                    failure_tolerance=self.args.failure_tolerance,
+                    success_tolerance=self.args.success_tolerance,
+                )
                 model = self.initialize_global_surrogate_model(self.args.X, hidden_dims=self.args.hidden_dims) 
                 model = self.update_surr_model(
                     model=model,
@@ -303,6 +311,8 @@ if __name__ == "__main__":
     parser.add_argument('--start_ix', type=int, default=0 ) # start and stop imnet 
     parser.add_argument('--stop_ix', type=int, default=100 ) # start and stop imnet 
     parser.add_argument('--compress_search_space', type=bool, default=False )
+    parser.add_argument('--failure_tolerance', type=int, default=10 )  
+    parser.add_argument('--success_tolerance', type=int, default=10 )  
     args = parser.parse_args() 
 
     if args.compress_search_space:

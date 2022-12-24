@@ -47,6 +47,8 @@ def update_state(state, Y_next):
     state.best_value = max(state.best_value, max(Y_next).item())
     if state.length < state.length_min:
         state.restart_triggered = True
+    
+    return state 
 
 
 def generate_batch(
