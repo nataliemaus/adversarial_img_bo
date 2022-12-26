@@ -163,6 +163,7 @@ class AdversarialsObjective(Objective):
         elif self.single_number_per_token:
             self.search_space_dim = 1 # dim per token 
             self.compressed_embeddings = (torch.tensor(self.all_token_idxs).float()/len(self.vocab)).unsqueeze(-1)
+            self.compressed_embeddings = self.compressed_embeddings.to(self.torch_device)
         else:
             self.search_space_dim = 768 # dim per token 
         self.dim = self.n_tokens*self.search_space_dim
