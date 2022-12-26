@@ -81,7 +81,6 @@ class GPModel_Additive_Kernel(ApproximateGP): # PPGPR w/ Additive Kernel, No DKL
         base_kernel = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
         self.covar_module = AdditiveStructureKernel(base_kernel, inducing_points.shape[-1])
         self.num_outputs = 1
-    
         self.likelihood = likelihood 
 
     def forward(self, x):

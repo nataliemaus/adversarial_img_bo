@@ -30,6 +30,7 @@ class AdversarialsObjective(Objective):
         optimal_class="cat",
         seed=1,
         remove_synonyms=False,
+        single_number_per_token=False,
         **kwargs,
     ):
         super().__init__(
@@ -43,6 +44,7 @@ class AdversarialsObjective(Objective):
         # CONSTANTS
         # if prepend_to_text is not "", we will prepend the adversairla prompt to the text
         # ie prepend_to_text = "a picture of a dog"
+        self.single_number_per_token = single_number_per_token
         self.prepend_to_text = prepend_to_text 
         self.remove_synonyms = remove_synonyms
         # if self.prepend_to_text:
@@ -123,6 +125,7 @@ class AdversarialsObjective(Objective):
             self.fixed_latents = None 
         
         self.vocab = self.tokenizer.get_vocab()
+        self.reverse_vocab = {self.vocab[k]:k for k in self.vocab.keys() }
 
         if self.exclude_all_related_prompts or self.exclude_some_related_prompts:
             # if only exlucde some (optimal class name, optimal class name +s, 
@@ -142,6 +145,7 @@ class AdversarialsObjective(Objective):
         self.all_token_embeddings = self.word_embedder(torch.tensor(self.all_token_idxs).to(self.torch_device)) 
 
         if self.compress_search_space:
+            assert not self.single_number_per_token
             # v2 (5 layers --> poor preformance! )
             n_layers = 4
             load_ckpt_wandb_name = "laced-snow-14"
@@ -156,9 +160,12 @@ class AdversarialsObjective(Objective):
             self.compressed_embeddings = self.ae.encoder(self.all_token_embeddings.float()).to(torch.float16)
             # torch.Size([49408, 768]) --> torch.Size([49407, 24])
             self.search_space_dim = self.compressed_embeddings.shape[-1] 
-            self.dim = self.n_tokens*self.search_space_dim
+        elif self.single_number_per_token:
+            self.search_space_dim = 1 # dim per token 
+            self.compressed_embeddings = (torch.tensor(self.all_token_idxs).float()/len(self.vocab)).unsqueeze(-1)
         else:
-            self.search_space_dim = 768 
+            self.search_space_dim = 768 # dim per token 
+        self.dim = self.n_tokens*self.search_space_dim
 
     def get_non_related_values(self):
         tmp = [] 
@@ -478,19 +485,28 @@ class AdversarialsObjective(Objective):
     def get_init_word_embeddings(self, prompts):
         # Word embedding initialization at "cow"
         # promts = list of words, ie ["cow", "horse", "cat"]
-        word_embeddings =self.pipeline(
-            input_type="prompt", 
-            input_value=prompts, 
-            output_types = ["word_embedding"]
-        )["word_embedding"][:,1:-1,:] 
-        if self.N_extra_prepend_tokens > 0:
-            word_embeddings = word_embeddings[:, 0:-self.N_extra_prepend_tokens, :]
+        if self.single_number_per_token:
+            all_tokens = []
+            for prompt in prompts:
+                tokens = [self.vocab[word] for word in prompt.split()]
+                tokens = torch.tensor(tokens).float().unsqueeze(0)
+                all_tokens.append(tokens)
+            all_tokens = torch.cat(all_tokens)
+            word_embeddings = all_tokens/len(self.vocab)
+        else:
+            word_embeddings =self.pipeline(
+                input_type="prompt", 
+                input_value=prompts, 
+                output_types = ["word_embedding"]
+            )["word_embedding"][:,1:-1,:] 
+            if self.N_extra_prepend_tokens > 0:
+                word_embeddings = word_embeddings[:, 0:-self.N_extra_prepend_tokens, :]
 
-        if self.compress_search_space:
-            tmp = []
-            for x in word_embeddings:
-                tmp.append(self.ae.encoder(x.float()).unsqueeze(0))
-            word_embeddings = torch.cat(tmp, 0).to(torch.float16)
+            if self.compress_search_space:
+                tmp = []
+                for x in word_embeddings:
+                    tmp.append(self.ae.encoder(x.float()).unsqueeze(0))
+                word_embeddings = torch.cat(tmp, 0).to(torch.float16)
 
         return word_embeddings
 
@@ -509,10 +525,16 @@ class AdversarialsObjective(Objective):
         # Iterate through batch_size
         for i in range(word_embedding.shape[0]):
             # Euclidean Norm
-            if self.compress_search_space:
-                dists =  torch.norm(self.compressed_embeddings.unsqueeze(1) - word_embedding[i,:,:], dim = 2)
+            if self.compress_search_space or self.single_number_per_token: 
+                # single num per token:
+                #   compressed_emb = (49408, 1) --> torch.Size([49408, 1, 1])
+                #   embedding =  bsz, tokens, 768 
+                # compressed w/ ae:
+                #   compressed_emb = torch.Size([49408, 768]) --> torch.Size([49408, 1, 768])
+                #   embedding =  bsz, n_tokens, 768 
+                dists = torch.norm(self.compressed_embeddings.unsqueeze(1) - word_embedding[i,:,:], dim = 2)
             else:
-                dists =  torch.norm(self.all_token_embeddings.unsqueeze(1) - word_embedding[i,:,:], dim = 2)
+                dists = torch.norm(self.all_token_embeddings.unsqueeze(1) - word_embedding[i,:,:], dim = 2)
             closest_tokens = torch.argmin(dists, axis = 0)
             closest_tokens = torch.tensor([self.all_token_idxs[token] for token in closest_tokens]).to(self.torch_device)
             closest_vocab = self.tokenizer.decode(closest_tokens)

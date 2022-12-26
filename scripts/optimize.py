@@ -5,9 +5,20 @@ import numpy as np
 import sys 
 sys.path.append("../")
 from gpytorch.mlls import PredictiveLogLikelihood 
-from utils.bo_utils.trust_region import TrustRegionState, generate_batch, update_state
-from utils.bo_utils.ppgpr import GPModelDKL 
-from torch.utils.data import TensorDataset, DataLoader
+from utils.bo_utils.trust_region import (
+    TrustRegionState, 
+    generate_batch, 
+    update_state
+)
+from utils.bo_utils.ppgpr import (
+    GPModelDKL,
+    GPModel_Additive_Kernel,
+    GPModelDKL_Additive_Kernel,
+)
+from torch.utils.data import (
+    TensorDataset, 
+    DataLoader
+)
 from utils.adversarial_objective import AdversarialsObjective  
 import argparse 
 import wandb 
@@ -25,6 +36,21 @@ class RunTurbo():
 
     def initialize_global_surrogate_model(self, init_points, hidden_dims):
         likelihood = gpytorch.likelihoods.GaussianLikelihood().cuda() 
+        if self.args.additive_gp:
+            # good for single_number_per_token!!
+            assert self.args.single_number_per_token
+            if self.args.hidden_dims is None:
+                model = GPModel_Additive_Kernel(
+                    inducing_points=init_points.cuda(), 
+                    likelihood=likelihood,
+                )
+            else:
+                model = GPModelDKL_Additive_Kernel(
+                    inducing_points=init_points.cuda(), 
+                    likelihood=likelihood,
+                    hidden_dims=self.args.hidden_dims,
+                )
+
         model = GPModelDKL(
             init_points.cuda(), 
             likelihood=likelihood,
@@ -80,9 +106,10 @@ class RunTurbo():
             if not vocab_word in related_vocab:
                 tmp.append(vocab_word)
         starter_vocab = tmp 
-        N = self.args.n_tokens - 1
-        if self.args.prepend_to_text:
-            N = self.args.n_tokens 
+        # N = self.args.n_tokens - 1
+        # if self.args.prepend_to_text:
+        #     N = self.args.n_tokens 
+        N = self.args.n_tokens 
         prompts = [] 
         iters = math.ceil(self.args.n_init_pts/self.args.n_init_per_prompt) 
         for i in range(iters):
@@ -104,6 +131,9 @@ class RunTurbo():
         n_batches = math.ceil(self.args.n_init_pts / (self.args.bsz*self.args.n_init_per_prompt)) 
         for i in range(n_batches): 
             prompt_batch = prompts[i*self.args.bsz:(i+1)*self.args.bsz] 
+            # if args.single_number_per_token:
+            #     X = torch.FloatTensor(self.args.bsz, self.args.objective.dim).uniform_(0, 1)
+            # else:
             X = self.args.objective.get_init_word_embeddings(prompt_batch) 
             X = X.detach().cpu() 
             X = X.reshape(self.args.bsz, self.args.objective.dim ) 
@@ -165,6 +195,11 @@ class RunTurbo():
             self.args.hidden_dims = tuple_type("(1024,256,128,64)") 
         if self.args.compress_search_space:
             self.args.hidden_dims = tuple_type("(32,32,16)") 
+        if self.args.single_number_per_token:
+            if self.args.additive_gp:
+                self.args.hidden_dims = None 
+            else:
+                self.args.hidden_dims = (self.args.n_tokens, self.args.n_tokens)
         self.args.update_state_fix = True 
         self.args.update_state_fix2 = True 
         self.args.update_state_fix3 = True 
@@ -192,6 +227,7 @@ class RunTurbo():
             optimal_class=self.args.optimal_class,
             visualize=False,
             compress_search_space=self.args.compress_search_space,
+            single_number_per_token=self.args.single_number_per_token,
             remove_synonyms=self.args.remove_synonyms,
         )
 
@@ -322,10 +358,11 @@ if __name__ == "__main__":
     parser.add_argument('--start_ix', type=int, default=0 ) # start and stop imnet 
     parser.add_argument('--stop_ix', type=int, default=100 ) # start and stop imnet 
     parser.add_argument('--compress_search_space', type=bool, default=False )
+    parser.add_argument('--single_number_per_token', type=bool, default=False )
     parser.add_argument('--failure_tolerance', type=int, default=10 )  
     parser.add_argument('--success_tolerance', type=int, default=10 )  
+    parser.add_argument('--additive_gp', type=bool, default=False)  
     args = parser.parse_args() 
-
 
     if args.optimal_class == "all":
         imagenet_dict = load_imagenet()
@@ -354,14 +391,14 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --compress_search_space True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --compress_search_space True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --compress_search_space True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --compress_search_space True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
 
 
     # LOCUST (JAKE NEW MACHINE): ... ??? 
@@ -369,14 +406,14 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --compress_search_space True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
 
 
 
