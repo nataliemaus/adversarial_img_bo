@@ -450,7 +450,7 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 92 --stop_ix 200 --bsz 5
     # gauss node 3, (careful) 
     #   tmux attach -t adv1, adv2, adv6, adv7  (opt text! v2)
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --additive_gp True --prepend_task True --bsz 10  
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --additive_gp True --prepend_task True --bsz 10  
     # CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --additive_gp True --bsz 10 
     # CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --prepend_task True --bsz 10 
     # CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --bsz 10 

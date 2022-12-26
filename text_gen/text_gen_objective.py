@@ -20,14 +20,16 @@ class AdversarialsTextGenObjective(Objective):
         num_gen_seq=5,
         max_gen_length=10,
         dist_metric="sq_euclidean",
+        lb=None,
+        ub=None,
         **kwargs,
     ):
         super().__init__(
             num_calls=num_calls,
             task_id='adversarial4',
             dim=n_tokens*768,
-            lb=None,
-            ub=None,
+            lb=lb,
+            ub=ub,
             **kwargs,
         ) 
 
