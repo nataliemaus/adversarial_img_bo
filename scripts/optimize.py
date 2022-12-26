@@ -50,12 +50,12 @@ class RunTurbo():
                     likelihood=likelihood,
                     hidden_dims=self.args.hidden_dims,
                 )
-
-        model = GPModelDKL(
-            init_points.cuda(), 
-            likelihood=likelihood,
-            hidden_dims=hidden_dims,
-        ).cuda()
+        else:
+            model = GPModelDKL(
+                init_points.cuda(), 
+                likelihood=likelihood,
+                hidden_dims=hidden_dims,
+            ).cuda()
         model = model.eval() 
         model = model.cuda()
         return model  
@@ -451,9 +451,9 @@ if __name__ == "__main__":
     # gauss node 3, (careful) 
     #   tmux attach -t adv1, adv2, adv6, adv7  (opt text! v2)
     # CUDA_VISIBLE_DEVICES=4 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --additive_gp True --prepend_task True --bsz 10  
-    # XXX CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --additive_gp True --bsz 10 
-    # XXX CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --prepend_task True --bsz 10 
-    # XXX CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --bsz 10 
+    # XXX TODO XXX CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --additive_gp True --bsz 10 
+    # XXX TODO XXX CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --prepend_task True --bsz 10 
+    # XXX TODO XXX CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --bsz 10 
 
     # jkgradner: 
     # tmux new -s adv0

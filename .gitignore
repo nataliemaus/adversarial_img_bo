@@ -12,3 +12,4 @@ nltk_data/
 nltk_data/*
 corpora/
 corpora/*
+*.prof
