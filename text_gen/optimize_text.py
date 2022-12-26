@@ -28,6 +28,8 @@ class OptimizeText(RunTurbo):
         n_batches = math.ceil(self.args.n_init_pts / self.args.bsz) 
         for _ in range(n_batches): 
             X = torch.randn(self.args.bsz, self.args.objective.dim )*0.01
+            if self.args.single_number_per_token:
+                X = torch.rand(self.args.bsz, self.args.objective.dim )
             XS.append(X)   
             prompts, ys, gen_text = self.args.objective(X.to(torch.float16))
             YS.append(ys) 
@@ -80,6 +82,9 @@ class OptimizeText(RunTurbo):
             prepend_to_text=self.args.prepend_to_text,
             visualize=False,
             compress_search_space=self.args.compress_search_space,
+            single_number_per_token=self.args.single_number_per_token,
+            lb = self.args.lb,
+            ub = self.args.ub,
         )
 
 
@@ -116,6 +121,9 @@ if __name__ == "__main__":
     parser.add_argument('--prepend_task', type=bool, default=False)
     parser.add_argument('--failure_tolerance', type=int, default=10 )  
     parser.add_argument('--success_tolerance', type=int, default=10 )  
+    parser.add_argument('--single_number_per_token', type=bool, default=False )
+    parser.add_argument('--additive_gp', type=bool, default=False)  
+
     args = parser.parse_args() 
 
     runner = OptimizeText(args)

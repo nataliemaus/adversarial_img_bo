@@ -15,6 +15,7 @@ class AdversarialsTextGenObjective(Objective):
         batch_size=10,
         visualize=False,
         compress_search_space=False,
+        single_number_per_token=False,
         prepend_to_text="",
         num_gen_seq=5,
         max_gen_length=10,
@@ -31,6 +32,7 @@ class AdversarialsTextGenObjective(Objective):
         ) 
 
         assert dist_metric in ['cosine_sim', "sq_euclidean"]
+        self.single_number_per_token = single_number_per_token
         self.prepend_to_text = prepend_to_text
         self.N_extra_prepend_tokens = len(self.prepend_to_text.split() )
         self.dist_metric = dist_metric # metric='cosine_sim'
@@ -61,6 +63,7 @@ class AdversarialsTextGenObjective(Objective):
         self.batch_size = batch_size
 
         if self.compress_search_space:
+            assert not self.single_number_per_token
             # latent_dim_dict = {} 
             # latent_dim_dict[24] = ["devout-firebrand-15", 5]
             n_layers = 5
@@ -75,10 +78,14 @@ class AdversarialsTextGenObjective(Objective):
             self.ae = self.ae.cuda() 
             self.compressed_embeddings = self.ae.encoder(self.all_token_embeddings.float()).to(torch.float16)
             # torch.Size([49408, 768]) --> torch.Size([49407, 24])
-            self.search_space_dim = self.compressed_embeddings.shape[-1] 
-            self.dim = self.n_tokens*self.search_space_dim
+            self.search_space_dim = self.compressed_embeddings.shape[-1] # dim per token 
+        elif self.single_number_per_token:
+            self.search_space_dim = 1 # dim per token 
+            self.compressed_embeddings = (torch.tensor(self.all_token_idxs).float()/len(self.vocab)).unsqueeze(-1)
+            self.compressed_embeddings = self.compressed_embeddings.to(self.torch_device)
         else:
             self.search_space_dim = 768 
+        self.dim = self.n_tokens*self.search_space_dim
 
     '''
         Given a word embedding, project it to the closest word embedding of actual tokens using cosine similarity
@@ -207,7 +214,7 @@ class AdversarialsTextGenObjective(Objective):
         # Iterate through batch_size
         for i in range(word_embedding.shape[0]):
             # Euclidean Norm
-            if self.compress_search_space:
+            if self.compress_search_space or self.single_number_per_token:
                 dists =  torch.norm(self.compressed_embeddings.unsqueeze(1) - word_embedding[i,:,:], dim = 2)
             else:
                 dists =  torch.norm(self.all_token_embeddings.unsqueeze(1) - word_embedding[i,:,:], dim = 2)
