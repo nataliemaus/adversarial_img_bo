@@ -170,11 +170,11 @@ class AdversarialsTextGenObjective(Objective):
             else:
                 max_end_index = max(max_end_index,cur_end_index)
 
-        # Check that shapes are valid
-        if input_type == "raw_word_embedding":
-            if len(input_value.shape) != 3 or input_value.shape[2] != 768:
-                raise ValueError(f"Word embeddings are the incorrect size, \
-                    should be (batch_size, num_tokens, 768) but were {input_value.shape}")
+        # # Check that shapes are valid
+        # if input_type == "raw_word_embedding":
+        #     if len(input_value.shape) != 3 or input_value.shape[2] != 768:
+        #         raise ValueError(f"Word embeddings are the incorrect size, \
+        #             should be (batch_size, num_tokens, 768) but were {input_value.shape}")
 
         cur_pipe_val = input_value
         output_dict = {}
