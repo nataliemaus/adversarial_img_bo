@@ -196,10 +196,15 @@ class RunTurbo():
         if self.args.compress_search_space:
             self.args.hidden_dims = tuple_type("(32,32,16)") 
         if self.args.single_number_per_token:
+            self.args.lb = 0
+            self.args.ub = 1 
             if self.args.additive_gp:
                 self.args.hidden_dims = None 
             else:
                 self.args.hidden_dims = (self.args.n_tokens, self.args.n_tokens)
+        else:
+            self.args.lb = None
+            self.args.ub = None
         self.args.update_state_fix = True 
         self.args.update_state_fix2 = True 
         self.args.update_state_fix3 = True 
@@ -229,6 +234,8 @@ class RunTurbo():
             compress_search_space=self.args.compress_search_space,
             single_number_per_token=self.args.single_number_per_token,
             remove_synonyms=self.args.remove_synonyms,
+            lb = self.args.lb,
+            ub = self.args.ub,
         )
 
     def optimize(self):

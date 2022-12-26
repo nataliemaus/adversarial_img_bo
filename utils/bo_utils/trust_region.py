@@ -15,7 +15,7 @@ from typing import Any
 class TrustRegionState:
     dim: int
     best_value: float = -float("inf") 
-    length: float = 0.8 
+    length: float = 1.0 # 0.8 
     length_min: float = 0.5 ** 7
     length_max: float = 1.6
     failure_counter: int = 0
