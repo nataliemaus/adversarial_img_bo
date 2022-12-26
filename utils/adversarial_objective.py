@@ -491,7 +491,7 @@ class AdversarialsObjective(Objective):
                 tokens = [self.vocab[word] for word in prompt.split()]
                 tokens = torch.tensor(tokens).float().unsqueeze(0)
                 all_tokens.append(tokens)
-            all_tokens = torch.cat(all_tokens)
+            all_tokens = torch.cat(all_tokens).cuda() 
             word_embeddings = all_tokens/len(self.vocab)
         else:
             word_embeddings =self.pipeline(
