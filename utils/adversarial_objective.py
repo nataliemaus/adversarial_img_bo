@@ -356,8 +356,6 @@ class AdversarialsObjective(Objective):
             class_ix = self.imagenet_class_to_ix[self.optimal_class] 
         # probabilities.shape = (bsz,1000) = (bsz,n_imagenet_classes) 
         most_probable_classes = torch.argmax(probabilities, dim=-1) # (bsz,)
-        import pdb 
-        pdb.set_trace() 
         self.most_probable_classes_batch = [self.ix_to_imagenet_class[ix.item()] for ix in most_probable_classes]
         total_probs = torch.max(probabilities[:,class_ix:class_ix+1], dim = 1).values # classes 281:282 are HOUSE cat classes
         # total_cat_probs = torch.max(probabilities[:,281:286], dim = 1).values # classes 281:286 are cat classes

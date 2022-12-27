@@ -27,7 +27,7 @@ import os
 os.environ["WANDB_SILENT"] = "true" 
 import random 
 import pandas as pd 
-from utils.imagenet_classes import load_imagenet
+from utils.imagenet_classes import load_valid_imagenet_classes
 
 
 class RunTurbo():
@@ -390,8 +390,7 @@ if __name__ == "__main__":
     args = parser.parse_args() 
 
     if args.optimal_class == "all":
-        imagenet_class_to_ix, ix_to_imagenet_class = load_imagenet()
-        classes = list(imagenet_class_to_ix.keys())  # 583 
+        classes = load_valid_imagenet_classes()
         for clas in classes[args.start_ix:args.stop_ix]:
             args.optimal_class = clas 
             runner = RunTurbo(args) 
