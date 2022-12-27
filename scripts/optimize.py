@@ -416,14 +416,14 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
 
 
     # LOCUST (JAKE NEW MACHINE): ... ??? 
@@ -431,14 +431,14 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --single_number_per_token True --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
 
 
 
