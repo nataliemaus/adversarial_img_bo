@@ -5,6 +5,7 @@ from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import AutoencoderKL, UNet2DConditionModel, PNDMScheduler
 from torchvision import transforms
 from .objective import Objective
+import numpy as np 
 import sys 
 sys.path.append("../")
 from .get_synonyms import get_synonyms # 
@@ -169,6 +170,7 @@ class AdversarialsObjective(Objective):
         else:
             self.search_space_dim = 768 # dim per token 
         self.dim = self.n_tokens*self.search_space_dim
+        self.imagenet_class_to_ix, self.ix_to_imagenet_class = load_imagenet()
 
     def get_non_related_values(self):
         tmp = [] 
@@ -343,21 +345,19 @@ class AdversarialsObjective(Objective):
         # The output has unnormalized scores. To get probabilities, you can run a softmax on it.
         probabilities = torch.nn.functional.softmax(output, dim=1)
         if self.optimal_class == "cat":
-            class_ix0 = 281
-            class_ix1 = 282
+            class_ix = 281
         elif self.optimal_class == "violin":
-            class_ix0 = 889
-            class_ix1 = 890 
+            class_ix = 889
         elif self.optimal_class == "car": 
             # 705, 706 = passenger car (but could be train passenger car too... idk, stick w/ sports car!)
             # 817, 818 = sports car !!! 
-            class_ix0 = 817
-            class_ix1 = 818 
+            class_ix = 817
         else:
-            ix = load_imagenet()[self.optimal_class]
-            class_ix0 = ix + 1 
-            class_ix1 = ix + 2 
-        total_probs = torch.max(probabilities[:,class_ix0:class_ix1], dim = 1).values # classes 281:282 are HOUSE cat classes
+            class_ix = self.imagenet_class_to_ix[self.optimal_class] 
+        # probabilities.shape = (bsz,1000) = (bsz,n_imagenet_classes) 
+        most_probable_classes = torch.argmax(probabilities, dim=-1) # (bsz,)
+        self.most_probable_classes_batch = [self.ix_to_imagenet_class[ix] for ix in most_probable_classes]
+        total_probs = torch.max(probabilities[:,class_ix:class_ix+1], dim = 1).values # classes 281:282 are HOUSE cat classes
         # total_cat_probs = torch.max(probabilities[:,281:286], dim = 1).values # classes 281:286 are cat classes
         #total_dog_probs = torch.sum(probabilities[:,151:268], dim = 1) # classes 151:268 are dog classes
         #p_dog = total_dog_probs / (total_cat_probs + total_dog_probs)
@@ -448,6 +448,7 @@ class AdversarialsObjective(Objective):
         if self.fixed_latents is None: # not using fixed latents... 
             ys = [] 
             imgs_per_latent = [] ## N latents x bsz : [ [latent 0, bsz imgs ], [latent 1, bsz imgs], ..., [latent N bsz imgs]]
+            most_likely_classes_per_latent = [] # 
             for _ in range(self.avg_over_N_latents):
                 out_dict = self.pipeline(
                     input_type=input_type,
@@ -457,11 +458,22 @@ class AdversarialsObjective(Objective):
                 )
                 y = out_dict['loss']
                 ys.append(y.unsqueeze(0)) 
+                most_likely_classes_per_latent.append(self.most_probable_classes_batch)
                 if return_img:
                     imgs = out_dict["image"] 
                     imgs_per_latent.append(imgs) 
             ys = torch.cat(ys) # torch.Size([N_latents, bsz]) 
             y = ys.mean(0) # (bsz,) 
+            self.most_probable_classes = []
+            self.prcnts_correct_class = []
+            for i in range(self.batch_size):
+                most_likely_cls_form_xi = []
+                for clss_for_latent in most_likely_classes_per_latent:
+                    most_likely_cls_form_xi.append(clss_for_latent[i])
+                mode_most_likely_class = max(set(most_likely_cls_form_xi), key=most_likely_cls_form_xi.count)
+                self.most_probable_classes.append(mode_most_likely_class) 
+                prcnt_correct_class = (np.array(most_likely_cls_form_xi) == self.optimal_class).sum() / len(most_likely_cls_form_xi)
+                self.prcnts_correct_class.append(prcnt_correct_class) # % of latents --> correct class 
             if return_img:
                 imgs = [] # bsz x N latents: [ [latent 0, latent 1, ...], [latent 0, latent 1, ...],, ..., [latent 0, latent 1, ...],]
                 for i in range(self.batch_size):
@@ -476,7 +488,9 @@ class AdversarialsObjective(Objective):
                 output_types=out_types,
                 fixed_latents=self.fixed_latents
             )
-            y = out_dict['loss']
+            self.most_probable_classes = self.most_probable_classes_batch
+            self.prcnts_correct_class = (np.array(self.most_probable_classes_batch) == self.optimal_class).tolist()
+            y = out_dict['loss'] 
             if return_img:
                 imgs = out_dict["image"] 
         if self.minmize: 
@@ -487,7 +501,7 @@ class AdversarialsObjective(Objective):
     
     def get_init_word_embeddings(self, prompts):
         # Word embedding initialization at "cow"
-        # promts = list of words, ie ["cow", "horse", "cat"]
+        # promts = list of words, ie ["cow", "horse", "cat"] 
         if self.single_number_per_token:
             all_tokens = []
             for prompt in prompts:

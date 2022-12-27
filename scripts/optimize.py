@@ -3,7 +3,7 @@ import torch
 import gpytorch
 import numpy as np 
 import sys 
-sys.path.append("../")
+sys.path.append("../") 
 from gpytorch.mlls import PredictiveLogLikelihood 
 from utils.bo_utils.trust_region import (
     TrustRegionState, 
@@ -127,13 +127,16 @@ class RunTurbo():
         YS = [] 
         XS = [] 
         PS = []
+        most_probable_clss = []
+        prcnt_correct_clss = []
         # if do batches of more than 10, get OOM 
         n_batches = math.ceil(self.args.n_init_pts / (self.args.bsz*self.args.n_init_per_prompt)) 
         for i in range(n_batches): 
             prompt_batch = prompts[i*self.args.bsz:(i+1)*self.args.bsz] 
             # if args.single_number_per_token:
             #     X = torch.FloatTensor(self.args.bsz, self.args.objective.dim).uniform_(0, 1)
-            # else:
+            # else: 
+            # self.args.objective
             X = self.args.objective.get_init_word_embeddings(prompt_batch) 
             X = X.detach().cpu() 
             X = X.reshape(self.args.bsz, self.args.objective.dim ) 
@@ -144,26 +147,39 @@ class RunTurbo():
                 xs, ys = self.args.objective(X.to(torch.float16))
                 YS.append(ys) 
                 PS = PS + xs 
+                most_probable_clss = most_probable_clss + self.args.objective.most_probable_classes
+                prcnt_correct_clss = prcnt_correct_clss + self.args.objective.prcnts_correct_class
         Y = torch.cat(YS).detach().cpu() 
         self.args.X = torch.cat(XS).float().detach().cpu() 
         self.args.Y = Y.unsqueeze(-1)  
         self.args.P = PS 
+        self.args.most_probable_clss = most_probable_clss
+        self.args.prcnt_correct_clss = prcnt_correct_clss
 
     def save_stuff(self, tracker):
         X = self.args.X
         Y = self.args.Y
         P = self.args.P 
+        C = self.args.most_probable_clss
+        PRC = self.args.prcnt_correct_clss 
         best_x = X[Y.argmax(), :].squeeze().to(torch.float16)
         torch.save(best_x, f"../best_xs/{wandb.run.name}-best-x.pt") 
         if self.args.objective.project_back: 
-            best_prompt = P[Y.argmax()]
+            best_prompt = P[Y.argmax()] 
             tracker.log({"best_prompt":best_prompt}) 
+        # most probable class (mode over latents)
+        most_probable_class = C[Y.argmax()] 
+        tracker.log({"most_probable_class":most_probable_class}) 
+        # prcnt of latents where most probable class is correct (ie 3/5)
+        prcnt_latents_correct_class_most_probable = PRC[Y.argmax()] 
+        tracker.log({"prcnt_latents_correct_class_most_probable":prcnt_latents_correct_class_most_probable}) 
+
         save_path = f"../best_xs/{wandb.run.name}-all-data.csv"
-        prompts_arr = np.array(P)
-        loss_arr = Y.squeeze().detach().cpu().numpy() 
         df = pd.DataFrame() 
-        df['prompt'] = prompts_arr
-        df["loss"] = loss_arr 
+        df['prompt'] = np.array(P)
+        df['most_probable_class'] = np.array(C)
+        df['prcnt_latents_correct_class_most_probable'] = np.array(PRC) 
+        df["loss"] = Y.squeeze().detach().cpu().numpy() 
         df.to_csv(save_path, index=None)
 
         if False:
@@ -215,6 +231,8 @@ class RunTurbo():
     def call_oracle_and_update_next(self, x_next):
         prompts_next, y_next = self.args.objective(x_next.to(torch.float16))
         self.args.P = self.args.P + prompts_next
+        self.args.most_probable_clss = self.args.most_probable_clss + self.args.objective.most_probable_classes
+        self.args.prcnt_correct_clss = self.args.prcnt_correct_clss + self.args.objective.prcnts_correct_class
         return y_next
 
     def init_objective(self):
@@ -366,14 +384,14 @@ if __name__ == "__main__":
     parser.add_argument('--stop_ix', type=int, default=100 ) # start and stop imnet 
     parser.add_argument('--compress_search_space', type=bool, default=False )
     parser.add_argument('--single_number_per_token', type=bool, default=False )
-    parser.add_argument('--failure_tolerance', type=int, default=10 )  
+    parser.add_argument('--failure_tolerance', type=int, default=32 )  
     parser.add_argument('--success_tolerance', type=int, default=10 )  
     parser.add_argument('--additive_gp', type=bool, default=False)  
     args = parser.parse_args() 
 
     if args.optimal_class == "all":
-        imagenet_dict = load_imagenet()
-        classes = list(imagenet_dict.keys())  # 583 
+        imagenet_class_to_ix, ix_to_imagenet_class = load_imagenet()
+        classes = list(imagenet_class_to_ix.keys())  # 583 
         for clas in classes[args.start_ix:args.stop_ix]:
             args.optimal_class = clas 
             runner = RunTurbo(args) 
