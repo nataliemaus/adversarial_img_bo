@@ -476,5 +476,5 @@ if __name__ == "__main__":
 
     # jkgradner: 
     # tmux new -s adv0
-    # CUDA_VISIBLE_DEVICES=0 python3 -m cProfile -o program.prof optimize.py --n_tokens 4 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --bsz 4
+    # XXX CUDA_VISIBLE_DEVICES=0 python3 -m cProfile -o program.prof optimize.py --n_tokens 4 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --bsz 4
 

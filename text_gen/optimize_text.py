@@ -85,6 +85,7 @@ class OptimizeText(RunTurbo):
             single_number_per_token=self.args.single_number_per_token,
             lb = self.args.lb,
             ub = self.args.ub,
+            text_gen_model=self.args.text_gen_model,
         )
 
 
@@ -123,7 +124,7 @@ if __name__ == "__main__":
     parser.add_argument('--success_tolerance', type=int, default=10 )  
     parser.add_argument('--single_number_per_token', type=bool, default=False )
     parser.add_argument('--additive_gp', type=bool, default=False)  
-
+    parser.add_argument('--text_gen_model', default="gpt2" )  
     args = parser.parse_args() 
 
     runner = OptimizeText(args)

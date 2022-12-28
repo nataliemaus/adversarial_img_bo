@@ -22,6 +22,7 @@ class AdversarialsTextGenObjective(Objective):
         dist_metric="sq_euclidean",
         lb=None,
         ub=None,
+        text_gen_model="opt",
         **kwargs,
     ):
         super().__init__(
@@ -32,8 +33,14 @@ class AdversarialsTextGenObjective(Objective):
             ub=ub,
             **kwargs,
         ) 
-
         assert dist_metric in ['cosine_sim', "sq_euclidean"]
+        if text_gen_model == "opt":
+            model_string = "facebook/opt-125m"
+        elif text_gen_model == "gpt2":
+            model_string = "gpt2"
+        else:
+            assert 0 
+
         self.single_number_per_token = single_number_per_token
         self.prepend_to_text = prepend_to_text
         self.N_extra_prepend_tokens = len(self.prepend_to_text.split() )
@@ -41,9 +48,9 @@ class AdversarialsTextGenObjective(Objective):
         self.torch_device = "cuda" if torch.cuda.is_available() else "cpu"
         self.distilBert_tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
         self.distilBert_model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
-        self.tokenizer = GPT2Tokenizer.from_pretrained("facebook/opt-125m")
-        self.generator = pipeline("text-generation", model="facebook/opt-125m")
-        self.model = OPTModel.from_pretrained("facebook/opt-125m")
+        self.tokenizer = GPT2Tokenizer.from_pretrained(model_string)
+        self.generator = pipeline("text-generation", model=model_string)
+        self.model = OPTModel.from_pretrained(model_string)
         self.model = self.model.to(self.torch_device)
         self.word_embedder = self.model.get_input_embeddings()
         self.vocab = self.tokenizer.get_vocab()
