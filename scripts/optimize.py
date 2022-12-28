@@ -443,9 +443,9 @@ if __name__ == "__main__":
 
     # Allegro (Osbert)
     #   tmux attach -t adv5 adv6, adv7  (now compression + tr better) 
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 2 --single_number_per_token True --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 4 --single_number_per_token True --exclude_all_related_prompts True --optimal_class cat --max_n_calls 40000 --n_init_pts 280 --bsz 28 --additive_gp True
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 4 --single_number_per_token True --exclude_all_related_prompts True --optimal_class cat --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 3 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
 
     # gauss node 1,      conda activate adv_env   (no more exclusion at all, and down to 4 tokens instead of 6)
     #   tmux attach -t adv0, 1, 2, 3, ..., 8
@@ -467,7 +467,7 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 92 --stop_ix 200 --bsz 5
     # gauss node 3, (careful) 
     #   tmux attach -t adv1, adv2, adv6, adv7  (opt text! v2)
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --additive_gp True --prepend_task True --bsz 10  
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize_text.py --n_tokens 3 --prepend_task True --bsz 10  
     # XXX TODO XXX CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --additive_gp True --bsz 10 
     # XXX TODO XXX CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --prepend_task True --bsz 10 
     # XXX TODO XXX CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --bsz 10 
