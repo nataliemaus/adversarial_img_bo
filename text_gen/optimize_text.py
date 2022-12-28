@@ -110,7 +110,7 @@ if __name__ == "__main__":
     parser.add_argument('--success_value', type=int, default=8)  
     parser.add_argument('--break_after_success', type=bool, default=True)
     ## meh  
-    parser.add_argument('--max_n_calls', type=int, default=40_000) 
+    parser.add_argument('--max_n_calls', type=int, default=20_000) 
     parser.add_argument('--n_addtional_evals', type=int, default=1_000) # evals afteer success
     parser.add_argument('--num_gen_seq', type=int, default=5 ) 
     parser.add_argument('--max_gen_length', type=int, default=10 ) 
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     parser.add_argument('--bsz', type=int, default=10)  
     parser.add_argument('--n_tokens', type=int, default=6 )  
     parser.add_argument('--prepend_task', type=bool, default=False)
-    parser.add_argument('--failure_tolerance', type=int, default=10 )  
+    parser.add_argument('--failure_tolerance', type=int, default=32 )  
     parser.add_argument('--success_tolerance', type=int, default=10 )  
     parser.add_argument('--single_number_per_token', type=bool, default=False )
     parser.add_argument('--additive_gp', type=bool, default=False)  
