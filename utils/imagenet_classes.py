@@ -11,9 +11,6 @@ def load_imagenet():
         imagenet_class_to_ix[clas] = ix 
         ix_to_imagenet_class[ix] = clas 
 
-    # class_ix = 817
-    import pdb 
-    pdb.set_trace() 
     return imagenet_class_to_ix, ix_to_imagenet_class
 
 

@@ -225,7 +225,7 @@ class RunTurbo():
         self.args.update_state_fix = True 
         self.args.update_state_fix2 = True 
         self.args.update_state_fix3 = True 
-        self.args.record_most_probable_fix = True 
+        self.args.record_most_probable_fix2 = True 
         if self.args.n_init_pts is None:
             self.args.n_init_pts = self.args.bsz * self.args.n_init_per_prompt
         assert self.args.n_init_pts % self.args.bsz == 0
