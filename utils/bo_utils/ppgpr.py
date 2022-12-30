@@ -71,12 +71,10 @@ class GPModel_Additive_Kernel(ApproximateGP): # PPGPR w/ Additive Kernel, No DKL
     # ADDITIVE KERNEL SOURCE:
     # https://github.com/cornellius-gp/gpytorch/blob/master/gpytorch/kernels/additive_structure_kernel.py
     def __init__(self, inducing_points, likelihood):
-
         variational_distribution = CholeskyVariationalDistribution(inducing_points.size(0) )
         variational_strategy = VariationalStrategy(self, inducing_points, variational_distribution, learn_inducing_locations=True)
 
         super(GPModel_Additive_Kernel, self).__init__(variational_strategy)
-
         self.mean_module = gpytorch.means.ConstantMean()
         base_kernel = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
         self.covar_module = AdditiveStructureKernel(base_kernel, inducing_points.shape[-1])
@@ -96,8 +94,75 @@ class GPModel_Additive_Kernel(ApproximateGP): # PPGPR w/ Additive Kernel, No DKL
             dist = self.likelihood(self(X)) 
 
             return GPyTorchPosterior(mvn=dist)
-    # Test:
-    # # gp = GPModel_Additive_Kernel(torch.randn(1024,256), gpytorch.likelihoods.GaussianLikelihood() ) 
+
+class SpecializedAdditiveGP(ApproximateGP):
+    def __init__(
+        self, 
+        inducing_points, 
+        likelihood, 
+        num_tokens,
+        hidden_dims=(32, 32), 
+    ): 
+        mean_modules = []
+        covar_modules = []
+        feature_extractors = []
+        inducing_points_list = []
+        inducing_points = inducing_points.reshape(inducing_points.shape[0], num_tokens, 768)
+        for token_num in range(num_tokens):
+            feature_extractor = DenseNetwork(
+                input_dim=768, 
+                hidden_dims=hidden_dims).to(inducing_points.device)
+            
+            inducing_pointsi = inducing_points[:, token_num, :]  
+            inducing_pointsi = feature_extractor(inducing_pointsi)
+            inducing_points_list.append(inducing_pointsi)
+            feature_extractors.append(feature_extractor)
+            mean_modules.append(gpytorch.means.ConstantMean() )
+            covar_modules.append(gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel()) )
+        
+        inducing_points = torch.cat(inducing_points_list)
+        # inducing_points = feature_extractors(inducing_points)
+        variational_distribution = CholeskyVariationalDistribution(inducing_points.size(0))
+        variational_strategy = VariationalStrategy(self, inducing_points, variational_distribution, learn_inducing_locations=True)
+        super(GPModelDKL, self).__init__(variational_strategy)
+        self.num_outputs = 1 
+        self.likelihood = likelihood
+        self.feature_extractors = feature_extractors
+        self.mean_modules = mean_modules
+        self.covar_modules = covar_modules
+        self.num_tokens = num_tokens
+
+    def forward(self, x):
+        posteriors = [] 
+        x = x.reshape(x.shape[0], self.num_tokens, 768)
+        for token_num in range(self.num_tokens):
+            input = x[:, token_num, :]  
+            input = self.feature_extractors[token_num](input)
+            mean_x = self.mean_modules[token_num](input)
+            covar_x = self.covar_modules[token_num](input)
+            posteriors.append(gpytorch.distributions.MultivariateNormal(mean_x, covar_x) )
+        posterior = posteriors[0]
+        for gp in posteriors[1:]:
+            posterior = posterior + gp
+        return posterior 
+
+    # def __call__(self, x, *args, **kwargs):
+    #     x = self.feature_extractor(x)
+    #     return super().__call__(x, *args, **kwargs)
+
+    def posterior(
+            self, X, output_indices=None, observation_noise=False, *args, **kwargs
+        ) -> GPyTorchPosterior:
+            self.eval()  # make sure model is in eval mode 
+            # self.model.eval() 
+            self.likelihood.eval()
+            dist = self.likelihood(self(X))
+
+            return GPyTorchPosterior(mvn=dist)
+
+
+
+
 
 
 class GPModelDKL(ApproximateGP):

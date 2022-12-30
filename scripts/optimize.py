@@ -14,6 +14,7 @@ from utils.bo_utils.ppgpr import (
     GPModelDKL,
     GPModel_Additive_Kernel,
     GPModelDKL_Additive_Kernel,
+    SpecializedAdditiveGP,
 )
 from torch.utils.data import (
     TensorDataset, 
@@ -38,17 +39,28 @@ class RunTurbo():
         likelihood = gpytorch.likelihoods.GaussianLikelihood().cuda() 
         if self.args.additive_gp:
             # good for single_number_per_token!!
-            assert self.args.single_number_per_token
-            if self.args.hidden_dims is None:
-                model = GPModel_Additive_Kernel(
-                    inducing_points=init_points.cuda(), 
-                    likelihood=likelihood,
-                )
+            if self.args.single_number_per_token:
+                if self.args.hidden_dims is None:
+                    model = GPModel_Additive_Kernel(
+                        inducing_points=init_points.cuda(), 
+                        likelihood=likelihood,
+                    )
+                else:
+                    model = GPModelDKL_Additive_Kernel(
+                        inducing_points=init_points.cuda(), 
+                        likelihood=likelihood,
+                        hidden_dims=self.args.hidden_dims,
+                    )
             else:
-                model = GPModelDKL_Additive_Kernel(
+                # You'd have a sum of num_tokens kernels, 
+                #   the first has active dims 0 through 767, 
+                #   the second has active dims 768 through ...
+                assert not self.args.compress_search_space 
+                model = SpecializedAdditiveGP(
                     inducing_points=init_points.cuda(), 
                     likelihood=likelihood,
                     hidden_dims=self.args.hidden_dims,
+                    num_tokens=self.args.num_tokens,
                 )
         else:
             model = GPModelDKL(
@@ -353,7 +365,7 @@ class RunTurbo():
                 # only give n_addtional_evals more calls 
                 self.args.max_n_calls = self.args.objective.num_calls + self.args.n_addtional_evals 
                 self.args.break_after_success = False 
-                self.tracker.log({"best_baseline":True})
+                self.tracker.log({"beat_best_baseline":True})
             x_next = generate_batch( 
                 state=tr,
                 model=model,
@@ -479,7 +491,6 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=5 python3 optimize_text.py --n_tokens 2 --bsz 28 --target_string z
     # CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --n_tokens 3 --bsz 28 --target_string z
     # CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string z
-
 
     # ERIC MACHINE: ... ???   (ssh nmaus@deep-a6000x8-1.seas.upenn.edu )
     #   tmux attach -t adv0, adv1, adv2, adv3, ..., adv7
