@@ -86,6 +86,7 @@ class OptimizeText(RunTurbo):
             ub = self.args.ub,
             text_gen_model=self.args.text_gen_model,
             loss_type=self.args.loss_type,
+            target_string=self.args.target_string,
         )
 
 
