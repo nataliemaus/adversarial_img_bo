@@ -107,17 +107,17 @@ if __name__ == "__main__":
     parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)") 
     parser.add_argument('--more_hdims', type=bool, default=True) # for >8 tokens only 
     parser.add_argument('--seed', type=int, default=1 ) 
-    parser.add_argument('--prepend_to_text', default="I am happy") 
     parser.add_argument('--success_value', type=int, default=8)  
-    parser.add_argument('--break_after_success', type=bool, default=True)
+    parser.add_argument('--break_after_success', type=bool, default=False)
+    parser.add_argument('--n_addtional_evals', type=int, default=1_000) # evals afteer success
     ## meh  
     parser.add_argument('--max_n_calls', type=int, default=20_000) 
-    parser.add_argument('--n_addtional_evals', type=int, default=1_000) # evals afteer success
     parser.add_argument('--num_gen_seq', type=int, default=5 ) 
     parser.add_argument('--max_gen_length', type=int, default=10 ) 
     parser.add_argument('--dist_metric', default="sq_euclidean" )  
     parser.add_argument('--compress_search_space', type=bool, default=False )
      ## modify...  
+    parser.add_argument('--prepend_to_text', default="I am happy") 
     parser.add_argument('--bsz', type=int, default=10)  
     parser.add_argument('--n_tokens', type=int, default=6 )  
     parser.add_argument('--prepend_task', type=bool, default=False)
@@ -126,8 +126,8 @@ if __name__ == "__main__":
     parser.add_argument('--single_number_per_token', type=bool, default=False )
     parser.add_argument('--additive_gp', type=bool, default=False)  
     parser.add_argument('--text_gen_model', default="opt" )  
-    parser.add_argument('--loss_type', default="log_prob_neg" ) # log_prob_neg, log_prob_pos, perc_target
-    parser.add_argument('--target_string', default="t" ) # log_prob_neg, log_prob_pos
+    parser.add_argument('--loss_type', default="perc_target" ) # log_prob_neg, log_prob_pos, perc_target
+    parser.add_argument('--target_string', default="cat" ) # log_prob_neg, log_prob_pos
     args = parser.parse_args() 
     assert args.text_gen_model in ["gpt2", "opt"] 
 

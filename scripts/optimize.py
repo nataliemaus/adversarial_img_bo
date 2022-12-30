@@ -208,11 +208,9 @@ class RunTurbo():
             out_baseline_prompts = out_baseline_prompts + xs
             baseline_most_probable_clss = baseline_most_probable_clss + self.args.objective.most_probable_classes
             baseline_prcnt_correct_clss = baseline_prcnt_correct_clss + self.args.objective.prcnts_correct_class 
-
-        baseline_scores = torch.cat(baseline_scores).detach().cpu() 
+        baseline_scores = torch.cat(baseline_scores).detach().cpu() # self.best_baseline_score
         self.best_baseline_score = baseline_scores.max().item()
         best_score_idx = torch.argmax(baseline_scores).item() 
-
         self.tracker.log({
             "baseline_scores":baseline_scores.tolist(),
             "baseline_prompts":out_baseline_prompts,
