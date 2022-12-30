@@ -5,6 +5,7 @@ import sys
 sys.path.append("../")
 from utils.objective import Objective 
 from utils.autoencoder import AE 
+import numpy as np 
 
 class AdversarialsTextGenObjective(Objective):
     def __init__(
@@ -24,6 +25,7 @@ class AdversarialsTextGenObjective(Objective):
         ub=None,
         text_gen_model="opt",
         loss_type="log_prob_neg", # log_prob_neg, log_prob_pos
+        target_string="t",
         **kwargs,
     ):
         super().__init__(
@@ -42,6 +44,7 @@ class AdversarialsTextGenObjective(Objective):
         else:
             assert 0 
 
+        self.target_string = target_string # "t"
         self.loss_type = loss_type 
         self.single_number_per_token = single_number_per_token
         self.prepend_to_text = prepend_to_text
@@ -137,21 +140,40 @@ class AdversarialsTextGenObjective(Objective):
         gen_texts = [[cur_dict['generated_text'] for cur_dict in cur_gen] for cur_gen in gen_texts]
         return gen_texts
         
-    def text_to_loss(self, text): # , loss_type='log_prob_pos')
-        num_prompts = len(text) 
-        flattened_text = [item for sublist in text for item in sublist]
-        inputs = self.distilBert_tokenizer(flattened_text, return_tensors="pt", padding=True)
-        with torch.no_grad():
-            logits = self.distilBert_model(**inputs).logits
-        probs = torch.softmax(logits, dim = 1)
-        if self.loss_type == 'log_prob_pos':
-            loss = torch.log(probs[:,1])
-        elif self.loss_type == 'log_prob_neg':
-            loss = torch.log(probs[:,0])
-        else:
-            raise ValueError(f"loss_type must be one of ['log_prob_pos', 'log_prob_neg'] but was {self.loss_type}")
-        loss = loss.reshape(num_prompts, -1) 
-        return loss 
+    def text_to_loss(self, text): # , loss_type='log_prob_pos') 
+        if self.loss_type in ['log_prob_pos', 'log_prob_neg']: 
+            num_prompts = len(text) 
+            flattened_text = [item for sublist in text for item in sublist]
+            inputs = self.distilBert_tokenizer(flattened_text, return_tensors="pt", padding=True)
+            with torch.no_grad():
+                logits = self.distilBert_model(**inputs).logits
+            probs = torch.softmax(logits, dim = 1)
+            if self.loss_type == 'log_prob_pos':
+                loss = torch.log(probs[:,1])
+            elif self.loss_type == 'log_prob_neg':
+                loss = torch.log(probs[:,0])
+            else:
+                raise ValueError(f"loss_type must be one of ['log_prob_pos', 'log_prob_neg'] but was {self.loss_type}")
+            loss = loss.reshape(num_prompts, -1) 
+        elif self.loss_type == "perc_target": # else: # if self.loss_type == 'perc_ts':
+            n_input = self.n_tokens + self.N_extra_prepend_tokens  
+            losses = []
+            for outputs in text:
+                scores_for_prompt = []
+                for output in outputs:
+                    score = 0.0 
+                    total = 0.0 
+                    for word in output.split()[n_input:]:
+                        if self.target_string in word:
+                            score += 1 
+                        total += 1
+                    score = score/total 
+                    scores_for_prompt.append(score) 
+                scores_for_prompt = torch.tensor(scores_for_prompt).float() 
+                losses.append(scores_for_prompt.unsqueeze(0))
+            loss = torch.cat(losses) 
+
+        return loss  # torch.Size([2, 5]) = torch.Size([bsz, N_avg_over])
         
     def pipe(self, input_type, input_value, output_types):
         valid_input_types = ['raw_word_embedding' ,'prompt']

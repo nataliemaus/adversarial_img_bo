@@ -85,6 +85,7 @@ class OptimizeText(RunTurbo):
             lb = self.args.lb,
             ub = self.args.ub,
             text_gen_model=self.args.text_gen_model,
+            loss_type=self.args.loss_type,
         )
 
 
@@ -124,6 +125,8 @@ if __name__ == "__main__":
     parser.add_argument('--single_number_per_token', type=bool, default=False )
     parser.add_argument('--additive_gp', type=bool, default=False)  
     parser.add_argument('--text_gen_model', default="opt" )  
+    parser.add_argument('--loss_type', default="log_prob_neg" ) # log_prob_neg, log_prob_pos, perc_target
+    parser.add_argument('--target_string', default="t" ) # log_prob_neg, log_prob_pos
     args = parser.parse_args() 
     assert args.text_gen_model in ["gpt2", "opt"] 
 
