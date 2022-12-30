@@ -11,7 +11,7 @@ class AdversarialsTextGenObjective(Objective):
         self,
         num_calls=0,
         n_tokens=1,
-        minimize=True,
+        minimize=False,
         batch_size=10,
         visualize=False,
         compress_search_space=False,
@@ -23,6 +23,7 @@ class AdversarialsTextGenObjective(Objective):
         lb=None,
         ub=None,
         text_gen_model="opt",
+        loss_type="log_prob_neg", # log_prob_neg, log_prob_pos
         **kwargs,
     ):
         super().__init__(
@@ -41,6 +42,7 @@ class AdversarialsTextGenObjective(Objective):
         else:
             assert 0 
 
+        self.loss_type = loss_type 
         self.single_number_per_token = single_number_per_token
         self.prepend_to_text = prepend_to_text
         self.N_extra_prepend_tokens = len(self.prepend_to_text.split() )
@@ -135,20 +137,19 @@ class AdversarialsTextGenObjective(Objective):
         gen_texts = [[cur_dict['generated_text'] for cur_dict in cur_gen] for cur_gen in gen_texts]
         return gen_texts
         
-    def text_to_loss(self, text, loss_type = 'log_prob_pos'):
-        num_prompts = len(text)
+    def text_to_loss(self, text): # , loss_type='log_prob_pos')
+        num_prompts = len(text) 
         flattened_text = [item for sublist in text for item in sublist]
         inputs = self.distilBert_tokenizer(flattened_text, return_tensors="pt", padding=True)
         with torch.no_grad():
             logits = self.distilBert_model(**inputs).logits
         probs = torch.softmax(logits, dim = 1)
-        
-        if loss_type == 'log_prob_pos':
+        if self.loss_type == 'log_prob_pos':
             loss = torch.log(probs[:,1])
-        elif loss_type == 'log_prob_neg':
+        elif self.loss_type == 'log_prob_neg':
             loss = torch.log(probs[:,0])
         else:
-            raise ValueError(f"loss_type must be one of ['log_prob_pos', 'log_prob_neg'] but was {loss_type}")
+            raise ValueError(f"loss_type must be one of ['log_prob_pos', 'log_prob_neg'] but was {self.loss_type}")
         loss = loss.reshape(num_prompts, -1) 
         return loss 
         

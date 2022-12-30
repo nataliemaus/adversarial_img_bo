@@ -45,7 +45,7 @@ class OptimizeText(RunTurbo):
     def save_stuff(self):
         X = self.args.X
         Y = self.args.Y
-        P = self.args.P
+        P = self.args.P 
         G = self.args.G 
         best_x = X[Y.argmax(), :].squeeze().to(torch.float16)
         torch.save(best_x, f"../best_xs/{wandb.run.name}-best-x.pt") 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     parser.add_argument('--init_n_epochs', type=int, default=80) 
     parser.add_argument('--acq_func', type=str, default='ts' ) 
     parser.add_argument('--debug', type=bool, default=False) 
-    parser.add_argument('--minimize', type=bool, default=True)  
+    parser.add_argument('--minimize', type=bool, default=False)  
     parser.add_argument('--task', default="textgen") 
     parser.add_argument('--hidden_dims', type=tuple_type, default="(256,128,64)") 
     parser.add_argument('--more_hdims', type=bool, default=True) # for >8 tokens only 
@@ -123,8 +123,9 @@ if __name__ == "__main__":
     parser.add_argument('--success_tolerance', type=int, default=10 )  
     parser.add_argument('--single_number_per_token', type=bool, default=False )
     parser.add_argument('--additive_gp', type=bool, default=False)  
-    parser.add_argument('--text_gen_model', default="gpt2" )  
+    parser.add_argument('--text_gen_model', default="opt" )  
     args = parser.parse_args() 
+    assert args.text_gen_model in ["gpt2", "opt"] 
 
     runner = OptimizeText(args)
     runner.optimize() 

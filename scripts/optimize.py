@@ -466,23 +466,7 @@ if __name__ == "__main__":
     # conda create --name adv_env --file adv_env.txt
     # conda activate adv_env
     # pip install nltk
-
     # RUNNING:::::::  
-
-    # ERIC MACHINE: ... ???   (ssh nmaus@deep-a6000x8-1.seas.upenn.edu )
-    #   tmux attach -t adv0, adv1, adv2, adv3, ..., adv7
-    #   dockerd-rootless-setuptool.sh install
-    #   systemctl --user start docker
-    #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --optimal_class goldfish --max_n_calls 40000 --n_init_pts 280 --bsz 28
-
 
     # LOCUST (JAKE NEW MACHINE): ... ??? 
     #   tmux attach -t adv0, adv1, adv2, adv3, ..., adv7
@@ -490,56 +474,54 @@ if __name__ == "__main__":
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
     # CUDA_VISIBLE_DEVICES=0 python3 optimize_text.py --n_tokens 2 --bsz 28 --n_init_pts 280 --prepend_task True
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize_text.py --n_tokens 2 --bsz 28 --n_init_pts 280
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 75 --stop_ix 80 --bsz 28 
     # CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --n_tokens 3 --bsz 28 --n_init_pts 280 --prepend_task True
     # CUDA_VISIBLE_DEVICES=3 python3 optimize_text.py --n_tokens 3 --bsz 28 --n_init_pts 280
     # CUDA_VISIBLE_DEVICES=4 python3 optimize_text.py --n_tokens 4 --bsz 28 --n_init_pts 280 --prepend_task True
     # CUDA_VISIBLE_DEVICES=5 python3 optimize_text.py --n_tokens 4 --bsz 28 --n_init_pts 280
     # CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --n_tokens 5 --bsz 28 --n_init_pts 280 --prepend_task True
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --n_tokens 5 --bsz 28 --n_init_pts 280
-    # XXX CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
-    # XXX CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 
-    # XXX CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
-    # XXX CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 3 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # XXX CUDA_VISIBLE_DEVICES=4 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
-    # XXX CUDA_VISIBLE_DEVICES=5 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
-    # XXX CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 5 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
-    # XXX CUDA_VISIBLE_DEVICES=7 python3 optimize.py --n_tokens 5 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --n_tokens 5 --bsz 28 --n_init_pts 280 
 
+
+    # ERIC MACHINE: ... ???   (ssh nmaus@deep-a6000x8-1.seas.upenn.edu )
+    #   tmux attach -t adv0, adv1, adv2, adv3, ..., adv7
+    #   dockerd-rootless-setuptool.sh install
+    #   systemctl --user start docker
+    #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 70 --stop_ix 75 --bsz 28
+    # XXX 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 80 --stop_ix 85 --bsz 28
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 85 --stop_ix 90 --bsz 28
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 90 --stop_ix 95 --bsz 28
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 95 --stop_ix 100 --bsz 28
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 100 --stop_ix 105 --bsz 28
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 105 --stop_ix 110 --bsz 28
 
 
     # Allegro (Osbert)
     #   tmux attach -t adv5 adv6, adv7  (now compression + tr better) 
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --n_tokens 4 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --n_tokens 3 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 110 --stop_ix 115 --bsz 28
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 115 --stop_ix 120 --bsz 28
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 125 --stop_ix 130 --bsz 28
 
     # gauss node 1,      conda activate adv_env   (no more exclusion at all, and down to 4 tokens instead of 6)
     #   tmux attach -t adv0, 1, 2, 3, ..., 8
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 7 
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 7 --stop_ix 14 
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 14 --stop_ix 21 
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 21 --stop_ix 28 
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 28  --stop_ix 35 
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 35 --stop_ix 42 
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 42 --stop_ix 49 
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 49 --stop_ix 56 
-    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --start_ix 56 --stop_ix 63  
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 5 
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 5 --stop_ix 10 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 10 --stop_ix 15 
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 15 --stop_ix 20 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 20  --stop_ix 25 
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 25 --stop_ix 30 
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 30 --stop_ix 35 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 35 --stop_ix 40 
+    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --start_ix 40 --stop_ix 45  
     # gauss node 2, 
     #   tmux attach -t adv21 , adv22, adv23, adv24, adv29
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 63 --stop_ix 70 
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 70 --stop_ix 77 
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 77 --stop_ix 84 
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 84 --stop_ix 92 
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 92 --stop_ix 200 --bsz 5
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 45 --stop_ix 50 --bsz 10
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 50 --stop_ix 55 --bsz 8
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 55 --stop_ix 60 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 60 --stop_ix 65 
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 65 --stop_ix 70 --bsz 8
     # gauss node 3, (careful) 
     #   tmux attach -t adv1, adv2, adv6, adv7  (opt text! v2)
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize_text.py --n_tokens 3 --prepend_task True --bsz 10  
-    # XXX TODO XXX CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --additive_gp True --bsz 10 
-    # XXX TODO XXX CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --prepend_task True --bsz 10 
-    # XXX TODO XXX CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --single_number_per_token True --n_tokens 3 --bsz 10 
-
-    # jkgradner: 
-    # tmux new -s adv0
-    # XXX CUDA_VISIBLE_DEVICES=0 python3 -m cProfile -o program.prof optimize.py --n_tokens 4 --compress_search_space True --exclude_all_related_prompts True --optimal_class cat --bsz 4
-
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 130 --stop_ix 1000 --bsz 10 
