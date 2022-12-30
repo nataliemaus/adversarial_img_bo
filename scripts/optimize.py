@@ -105,10 +105,6 @@ class RunTurbo():
             if not vocab_word in related_vocab:
                 tmp.append(vocab_word)
         starter_vocab = tmp 
-        # N = self.args.n_tokens - 1 
-        # if self.args.prepend_to_text:
-        #     N = self.args.n_tokens 
-        # N = self.args.n_tokens 
         prompts = [] 
         iters = math.ceil(self.args.n_init_pts/self.args.n_init_per_prompt) 
         for i in range(iters):
@@ -116,15 +112,52 @@ class RunTurbo():
             for j in range(self.args.n_tokens): # N
                 if j > 0: 
                     prompt += " "
-                if i == 0:
-                    prompts += self.args.objective.optimal_class 
-                else:
-                    prompt += random.choice(starter_vocab)
+                # if i == 0:
+                #     prompt += self.args.objective.optimal_class 
+                # else:
+                prompt += random.choice(starter_vocab)
             prompts.append(prompt)
 
         return prompts 
+    
+
+    def get_baseline_prompts(self):
+        prompts = [] # 5 example baseline prompts 
+        obj_cls = self.args.objective.optimal_class 
+
+        # "CLS CLS CLS CLS" 
+        prompt1 = obj_cls 
+        for i in range(self.args.n_tokens - 1):
+            prompt1 +=  f" {obj_cls }" 
+        prompts.append(prompt1) 
+
+        # "CLS end end end"
+        prompt2 = obj_cls 
+        for _ in range(self.args.n_tokens - 1):
+            prompt2 += " <|endoftext|>"
+        prompts.append(prompt2)
+
+        # # "a picture of a CLS" 
+        if self.args.n_tokens == 2:
+            prompts.append(f"a {obj_cls}")
+        elif self.args.n_tokens == 3:
+            prompts.append(f"picture of {obj_cls}")
+        elif self.args.n_tokens == 4:
+            prompts.append(f"picture of a {obj_cls}")
+        elif self.args.n_tokens == 5:
+            prompts.append(f"a picture of a {obj_cls}")
+        elif self.args.n_tokens > 5:
+            prompt3 = f"a picture of a {obj_cls}"
+            for _ in range(self.args.n_tokens - 5):
+                prompt3 += " <|endoftext|>"
+            prompts.append(prompt3)
+    
+        return prompts 
 
     def get_init_data(self ):
+        # get scores for baseline_prompts 
+        self.log_baseline_prompts() 
+        # then get initialization prompts + scores ... 
         prompts = self.get_init_prompts()
         YS = [] 
         XS = [] 
@@ -135,10 +168,6 @@ class RunTurbo():
         n_batches = math.ceil(self.args.n_init_pts / (self.args.bsz*self.args.n_init_per_prompt)) 
         for i in range(n_batches): 
             prompt_batch = prompts[i*self.args.bsz:(i+1)*self.args.bsz] 
-            # if args.single_number_per_token:
-            #     X = torch.FloatTensor(self.args.bsz, self.args.objective.dim).uniform_(0, 1)
-            # else: 
-            # self.args.objective
             X = self.args.objective.get_init_word_embeddings(prompt_batch) 
             X = X.detach().cpu() 
             X = X.reshape(self.args.bsz, self.args.objective.dim ) 
@@ -154,22 +183,46 @@ class RunTurbo():
         Y = torch.cat(YS).detach().cpu() 
         Y = Y.unsqueeze(-1)  
         XS = torch.cat(XS).float().detach().cpu() 
-        # self.args.baselineX = XS[0]
-        # self.args.baselineY = Y[0]
-        # self.args.baselineP = PS[0]
-        # self.args.baselineMPC = most_probable_clss[0]
-        # self.args.baselinePCC = prcnt_correct_clss[0]
+        self.args.X = XS
+        self.args.Y = Y 
+        self.args.P = PS 
+        self.args.most_probable_clss = most_probable_clss 
+        self.args.prcnt_correct_clss = prcnt_correct_clss 
+
+    def log_baseline_prompts(self):
+        baseline_prompts = self.get_baseline_prompts() 
+        while (len(baseline_prompts) % self.args.bsz) != 0:
+            baseline_prompts.append(baseline_prompts[0])
+        n_batches = int(len(baseline_prompts) / self.args.bsz )
+        baseline_scores = []
+        out_baseline_prompts = [] 
+        baseline_most_probable_clss = []
+        baseline_prcnt_correct_clss = []
+        for i in range(n_batches): 
+            prompt_batch = baseline_prompts[i*self.args.bsz:(i+1)*self.args.bsz] 
+            X = self.args.objective.get_init_word_embeddings(prompt_batch) 
+            X = X.detach().cpu() 
+            X = X.reshape(self.args.bsz, self.args.objective.dim ) 
+            xs, ys = self.args.objective(X.to(torch.float16))
+            baseline_scores.append(ys) 
+            out_baseline_prompts = out_baseline_prompts + xs
+            baseline_most_probable_clss = baseline_most_probable_clss + self.args.objective.most_probable_classes
+            baseline_prcnt_correct_clss = baseline_prcnt_correct_clss + self.args.objective.prcnts_correct_class 
+
+        baseline_scores = torch.cat(baseline_scores).detach().cpu() 
+        self.best_baseline_score = baseline_scores.max().item()
+        best_score_idx = torch.argmax(baseline_scores).item() 
+
         self.tracker.log({
-            "baseline_score":Y[0].item(),
-            "baseline_prompt":PS[0],
-            "baseline_most_probable_class":most_probable_clss[0],
-            "baseline_prcnt_latents_correct_class_most_probable":prcnt_correct_clss[0],
-        })
-        self.args.X = XS[1:]
-        self.args.Y = Y[1:]
-        self.args.P = PS[1:]
-        self.args.most_probable_clss = most_probable_clss[1:]
-        self.args.prcnt_correct_clss = prcnt_correct_clss[1:]
+            "baseline_scores":baseline_scores.tolist(),
+            "baseline_prompts":out_baseline_prompts,
+            "baseline_most_probable_classes":baseline_most_probable_clss,
+            "baseline_prcnt_latents_correct_class_most_probables":baseline_prcnt_correct_clss,
+            "best_baseline_score":self.best_baseline_score,
+            "best_baseline_prompt":out_baseline_prompts[best_score_idx],
+            "best_baseline_most_probable_class":baseline_most_probable_clss[best_score_idx],
+            "best_baseline_prcnt_latents_correct_class_most_probable":baseline_prcnt_correct_clss[best_score_idx],
+        }) 
 
     def save_stuff(self ):
         X = self.args.X
@@ -204,7 +257,7 @@ class RunTurbo():
             self.args.init_n_epochs = 2 
             self.args.bsz = 2
             self.args.max_n_calls = 200
-            self.args.avg_over_N_latents = 2
+            self.args.avg_over_N_latents = 2 
             self.args.n_init_per_prompt = 2
         if self.args.n_init_per_prompt is None:
             self.args.n_init_per_prompt = 10 
@@ -298,10 +351,11 @@ class RunTurbo():
                 prev_best = self.args.Y.max().item() 
                 # save_stuff(args, X, Y, P, args.objective, tracker)
                 self.save_stuff()
-            if self.args.break_after_success and (prev_best > self.args.success_value):
+            if self.args.break_after_success and (prev_best > self.best_baseline_score): 
                 # only give n_addtional_evals more calls 
                 self.args.max_n_calls = self.args.objective.num_calls + self.args.n_addtional_evals 
                 self.args.break_after_success = False 
+                self.tracker.log({"best_baseline":True})
             x_next = generate_batch( 
                 state=tr,
                 model=model,
@@ -368,7 +422,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_init_pts', type=int, default=None) 
     parser.add_argument('--prepend_to_text', default="a picture of a dog") 
     parser.add_argument('--break_after_success', type=bool, default=True )
-    parser.add_argument('--success_value', type=int, default=-1)  
+    parser.add_argument('--success_value', default="beat_baseline" ) # type=int, default=-1)  
     # maybe later 
     parser.add_argument('--max_n_calls', type=int, default=20_000) 
     parser.add_argument('--n_addtional_evals', type=int, default=3_000) 
