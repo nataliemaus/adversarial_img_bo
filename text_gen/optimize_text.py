@@ -42,7 +42,7 @@ class OptimizeText(RunTurbo):
         self.args.G = GS 
 
 
-    def save_stuff(self, tracker):
+    def save_stuff(self):
         X = self.args.X
         Y = self.args.Y
         P = self.args.P
@@ -50,9 +50,9 @@ class OptimizeText(RunTurbo):
         best_x = X[Y.argmax(), :].squeeze().to(torch.float16)
         torch.save(best_x, f"../best_xs/{wandb.run.name}-best-x.pt") 
         best_prompt = P[Y.argmax()]
-        tracker.log({"best_prompt":best_prompt}) 
+        self.tracker.log({"best_prompt":best_prompt}) 
         best_gen_text = G[Y.argmax()]
-        tracker.log({"best_gen_text":best_gen_text}) 
+        self.tracker.log({"best_gen_text":best_gen_text}) 
         save_path = f"../best_xs/{wandb.run.name}-all-data.csv"
         prompts_arr = np.array(P)
         loss_arr = Y.squeeze().detach().cpu().numpy() 
@@ -63,7 +63,6 @@ class OptimizeText(RunTurbo):
         for i in range(gen_text_arr.shape[-1]): 
             df[f"gen_text{i+1}"] = gen_text_arr[:,i] 
         df.to_csv(save_path, index=None)
-
 
     def call_oracle_and_update_next(self, x_next):
         p_next, y_next, g_next = self.args.objective(x_next.to(torch.float16))

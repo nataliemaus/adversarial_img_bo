@@ -62,13 +62,12 @@ class RunTurbo():
 
     def start_wandb(self):
         args_dict = vars(self.args) 
-        tracker = wandb.init(
+        self.tracker = wandb.init(
             entity=args_dict['wandb_entity'], 
             project=args_dict['wandb_project_name'],
             config=args_dict, 
         ) 
         print('running', wandb.run.name) 
-        return tracker 
 
     def update_surr_model(
         self,
@@ -96,9 +95,9 @@ class RunTurbo():
         return model
 
 
-    def get_init_prompts(self, objective ):
-        related_vocab = objective.related_vocab
-        all_vocab = list(objective.vocab.keys()) 
+    def get_init_prompts(self):
+        related_vocab = self.args.objective.related_vocab
+        all_vocab = list(self.args.objective.vocab.keys()) 
         random.shuffle(all_vocab)
         starter_vocab = all_vocab[0:100]
         tmp = [] 
@@ -106,24 +105,27 @@ class RunTurbo():
             if not vocab_word in related_vocab:
                 tmp.append(vocab_word)
         starter_vocab = tmp 
-        # N = self.args.n_tokens - 1
+        # N = self.args.n_tokens - 1 
         # if self.args.prepend_to_text:
         #     N = self.args.n_tokens 
-        N = self.args.n_tokens 
+        # N = self.args.n_tokens 
         prompts = [] 
         iters = math.ceil(self.args.n_init_pts/self.args.n_init_per_prompt) 
         for i in range(iters):
             prompt = ""
-            for j in range(N):
+            for j in range(self.args.n_tokens): # N
                 if j > 0: 
                     prompt += " "
-                prompt += random.choice(starter_vocab)
+                if i == 0:
+                    prompts += self.args.objective.optimal_class 
+                else:
+                    prompt += random.choice(starter_vocab)
             prompts.append(prompt)
 
         return prompts 
 
     def get_init_data(self ):
-        prompts = self.get_init_prompts(self.args.objective )
+        prompts = self.get_init_prompts()
         YS = [] 
         XS = [] 
         PS = []
@@ -150,13 +152,26 @@ class RunTurbo():
                 most_probable_clss = most_probable_clss + self.args.objective.most_probable_classes
                 prcnt_correct_clss = prcnt_correct_clss + self.args.objective.prcnts_correct_class
         Y = torch.cat(YS).detach().cpu() 
-        self.args.X = torch.cat(XS).float().detach().cpu() 
-        self.args.Y = Y.unsqueeze(-1)  
-        self.args.P = PS 
-        self.args.most_probable_clss = most_probable_clss
-        self.args.prcnt_correct_clss = prcnt_correct_clss
+        Y = Y.unsqueeze(-1)  
+        XS = torch.cat(XS).float().detach().cpu() 
+        # self.args.baselineX = XS[0]
+        # self.args.baselineY = Y[0]
+        # self.args.baselineP = PS[0]
+        # self.args.baselineMPC = most_probable_clss[0]
+        # self.args.baselinePCC = prcnt_correct_clss[0]
+        self.tracker.log({
+            "baseline_score":Y[0].item(),
+            "baseline_prompt":PS[0],
+            "baseline_most_probable_class":most_probable_clss[0],
+            "baseline_prcnt_latents_correct_class_most_probable":prcnt_correct_clss[0],
+        })
+        self.args.X = XS[1:]
+        self.args.Y = Y[1:]
+        self.args.P = PS[1:]
+        self.args.most_probable_clss = most_probable_clss[1:]
+        self.args.prcnt_correct_clss = prcnt_correct_clss[1:]
 
-    def save_stuff(self, tracker):
+    def save_stuff(self ):
         X = self.args.X
         Y = self.args.Y
         P = self.args.P 
@@ -166,13 +181,13 @@ class RunTurbo():
         torch.save(best_x, f"../best_xs/{wandb.run.name}-best-x.pt") 
         if self.args.objective.project_back: 
             best_prompt = P[Y.argmax()] 
-            tracker.log({"best_prompt":best_prompt}) 
+            self.tracker.log({"best_prompt":best_prompt}) 
         # most probable class (mode over latents)
         most_probable_class = C[Y.argmax()] 
-        tracker.log({"most_probable_class":most_probable_class}) 
+        self.tracker.log({"most_probable_class":most_probable_class}) 
         # prcnt of latents where most probable class is correct (ie 3/5)
         prcnt_latents_correct_class_most_probable = PRC[Y.argmax()] 
-        tracker.log({"prcnt_latents_correct_class_most_probable":prcnt_latents_correct_class_most_probable}) 
+        self.tracker.log({"prcnt_latents_correct_class_most_probable":prcnt_latents_correct_class_most_probable}) 
 
         save_path = f"../best_xs/{wandb.run.name}-all-data.csv"
         df = pd.DataFrame() 
@@ -181,18 +196,6 @@ class RunTurbo():
         df['prcnt_latents_correct_class_most_probable'] = np.array(PRC) 
         df["loss"] = Y.squeeze().detach().cpu().numpy() 
         df.to_csv(save_path, index=None)
-
-        if False:
-            pass_in_x = torch.cat([best_x.unsqueeze(0)]*args.bsz)
-            imgs, xs, y = objective.query_oracle(pass_in_x, return_img=True)
-            best_imgs = imgs[0] 
-            if type(best_imgs) != list:
-                best_imgs = [best_imgs]
-            for im_ix, img in enumerate(best_imgs):
-                img.save(f"../best_xs/{wandb.run.name}_im{im_ix}.png")
-            if objective.project_back: 
-                best_prompt = xs[0] 
-                tracker.log({"best_prompt":best_prompt}) 
 
 
     def init_args(self):
@@ -260,7 +263,7 @@ class RunTurbo():
 
     def optimize(self):
         self.init_args()  
-        tracker = self.start_wandb()
+        self.start_wandb() # initialized self.tracker
         self.init_objective() 
         self.get_init_data() 
         model = self.initialize_global_surrogate_model(
@@ -282,7 +285,7 @@ class RunTurbo():
             success_tolerance=self.args.success_tolerance,
         )
         while self.args.objective.num_calls < self.args.max_n_calls:
-            tracker.log({
+            self.tracker.log({
                 'num_calls':self.args.objective.num_calls,
                 'best_y':self.args.Y.max(),
                 'best_x':self.args.X[self.args.Y.argmax(), :].squeeze().tolist(), 
@@ -294,7 +297,7 @@ class RunTurbo():
             if self.args.Y.max().item() > prev_best: 
                 prev_best = self.args.Y.max().item() 
                 # save_stuff(args, X, Y, P, args.objective, tracker)
-                self.save_stuff(tracker)
+                self.save_stuff()
             if self.args.break_after_success and (prev_best > self.args.success_value):
                 # only give n_addtional_evals more calls 
                 self.args.max_n_calls = self.args.objective.num_calls + self.args.n_addtional_evals 
@@ -336,7 +339,7 @@ class RunTurbo():
                     train_y=y_next, 
                     n_epochs=self.args.n_epochs
                 )
-        tracker.finish() 
+        self.tracker.finish() 
 
 
 def tuple_type(strings):
@@ -432,7 +435,14 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize_text.py --n_tokens 3 --prepend_task True --bsz 28 --n_init_pts 280
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize_text.py --n_tokens 2 --bsz 28 --n_init_pts 280 --prepend_task True
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize_text.py --n_tokens 2 --bsz 28 --n_init_pts 280
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --n_tokens 3 --bsz 28 --n_init_pts 280 --prepend_task True
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize_text.py --n_tokens 3 --bsz 28 --n_init_pts 280
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize_text.py --n_tokens 4 --bsz 28 --n_init_pts 280 --prepend_task True
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize_text.py --n_tokens 4 --bsz 28 --n_init_pts 280
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --n_tokens 5 --bsz 28 --n_init_pts 280 --prepend_task True
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --n_tokens 5 --bsz 28 --n_init_pts 280
     # XXX CUDA_VISIBLE_DEVICES=0 python3 optimize.py --n_tokens 2 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
     # XXX CUDA_VISIBLE_DEVICES=1 python3 optimize.py --n_tokens 2 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 
     # XXX CUDA_VISIBLE_DEVICES=2 python3 optimize.py --n_tokens 3 --optimal_class pug --max_n_calls 40000 --n_init_pts 280 --bsz 28 --compress_search_space True
