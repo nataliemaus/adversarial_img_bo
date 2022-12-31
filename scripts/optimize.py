@@ -60,7 +60,7 @@ class RunTurbo():
                     inducing_points=init_points.cuda(), 
                     likelihood=likelihood,
                     hidden_dims=self.args.hidden_dims,
-                    num_tokens=self.args.num_tokens,
+                    num_tokens=self.args.n_tokens,
                 )
         else:
             model = GPModelDKL(

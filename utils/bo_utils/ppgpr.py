@@ -124,7 +124,7 @@ class SpecializedAdditiveGP(ApproximateGP):
         # inducing_points = feature_extractors(inducing_points)
         variational_distribution = CholeskyVariationalDistribution(inducing_points.size(0))
         variational_strategy = VariationalStrategy(self, inducing_points, variational_distribution, learn_inducing_locations=True)
-        super(GPModelDKL, self).__init__(variational_strategy)
+        super(SpecializedAdditiveGP, self).__init__(variational_strategy)
         self.num_outputs = 1 
         self.likelihood = likelihood
         self.feature_extractors = feature_extractors
@@ -134,10 +134,12 @@ class SpecializedAdditiveGP(ApproximateGP):
 
     def forward(self, x):
         posteriors = [] 
-        x = x.reshape(x.shape[0], self.num_tokens, 768)
+        import pdb 
+        pdb.set_trace() 
+        x = x.reshape(x.shape[0], self.num_tokens, -1)
         for token_num in range(self.num_tokens):
             input = x[:, token_num, :]  
-            input = self.feature_extractors[token_num](input)
+            # input = self.feature_extractors[token_num](input)
             mean_x = self.mean_modules[token_num](input)
             covar_x = self.covar_modules[token_num](input)
             posteriors.append(gpytorch.distributions.MultivariateNormal(mean_x, covar_x) )
@@ -146,9 +148,16 @@ class SpecializedAdditiveGP(ApproximateGP):
             posterior = posterior + gp
         return posterior 
 
-    # def __call__(self, x, *args, **kwargs):
-    #     x = self.feature_extractor(x)
-    #     return super().__call__(x, *args, **kwargs)
+    def __call__(self, x, *args, **kwargs):
+        x = x.reshape(x.shape[0], self.num_tokens, 768)
+        compressed = [] 
+        for token_num in range(self.num_tokens):
+            input = x[:, token_num, :]  
+            input = self.feature_extractors[token_num](input)
+            compressed.append(input)
+        x = torch.cat(compressed)
+        # x = self.feature_extractor(x)
+        return super().__call__(x, *args, **kwargs)
 
     def posterior(
             self, X, output_indices=None, observation_noise=False, *args, **kwargs

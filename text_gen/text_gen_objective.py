@@ -167,7 +167,10 @@ class AdversarialsTextGenObjective(Objective):
                         if self.target_string in word:
                             score += 1 
                         total += 1
-                    score = score/total 
+                    if total > 0:
+                        score = score/total 
+                    else:
+                        score = 0.0 
                     scores_for_prompt.append(score) 
                 scores_for_prompt = torch.tensor(scores_for_prompt).float() 
                 losses.append(scores_for_prompt.unsqueeze(0))
