@@ -502,14 +502,15 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 70 --stop_ix 75 --bsz 28
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 75 --stop_ix 80 --bsz 28 
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --n_tokens 3 --bsz 28 --target_string cat
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string cat
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string q
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize_text.py --n_tokens 2 --bsz 28 --target_string z
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --n_tokens 3 --bsz 28 --target_string z
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string z
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string a
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string t
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string q
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string z
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize_text.py --n_tokens 5 --bsz 28 --target_string a
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize_text.py --n_tokens 5 --bsz 28 --target_string t
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --n_tokens 5 --bsz 28 --target_string q
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --n_tokens 5 --bsz 28 --target_string z
+
 
     # ERIC MACHINE: ... ???   (ssh nmaus@deep-a6000x8-1.seas.upenn.edu )
     #   tmux attach -t adv0, adv1, adv2, adv3, ..., adv7

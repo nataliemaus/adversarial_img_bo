@@ -155,7 +155,7 @@ class AdversarialsTextGenObjective(Objective):
             else:
                 raise ValueError(f"loss_type must be one of ['log_prob_pos', 'log_prob_neg'] but was {self.loss_type}")
             loss = loss.reshape(num_prompts, -1) 
-        elif self.loss_type in ["perc_target", "num_target"]: # else: # if self.loss_type == 'perc_ts':
+        elif self.loss_type in ["perc_target", "num_target", "target_occurances"]: # else: #s if self.loss_type == 'perc_ts':
             n_input = self.n_tokens + self.N_extra_prepend_tokens  
             losses = []
             for outputs in text:
