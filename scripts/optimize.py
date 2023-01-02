@@ -74,8 +74,6 @@ class RunTurbo():
 
     def start_wandb(self):
         args_dict = vars(self.args) 
-        import pdb 
-        pdb.set_trace() 
         self.tracker = wandb.init(
             entity=args_dict['wandb_entity'], 
             project=args_dict['wandb_project_name'],
@@ -501,10 +499,10 @@ if __name__ == "__main__":
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
     # XXX LEAVE FOR TAI
     # XXX LEAVE FOR TAI
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 80 --stop_ix 85 --bsz 28
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 85 --stop_ix 90 --bsz 28
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 300 --stop_ix 350 --bsz 28
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 350 --stop_ix 400 --bsz 28
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 90 --stop_ix 95 --bsz 28
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 95 --stop_ix 100 --bsz 28
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 400 --stop_ix 450 --bsz 28
     # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 100 --stop_ix 105 --bsz 28
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 105 --stop_ix 110 --bsz 28
 
