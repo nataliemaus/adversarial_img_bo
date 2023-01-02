@@ -477,6 +477,8 @@ if __name__ == "__main__":
     parser.add_argument('--additive_gp', type=bool, default=False)  
     args = parser.parse_args() 
 
+    import pdb 
+    pdb.set_trace() 
     if args.optimal_class == "all":
         classes = load_valid_imagenet_classes()
         for clas in classes[args.start_ix:args.stop_ix]:
@@ -518,10 +520,10 @@ if __name__ == "__main__":
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
     # XXX LEAVE FOR TAI
     # XXX LEAVE FOR TAI
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 300 --stop_ix 350 --bsz 28
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 350 --stop_ix 400 --bsz 28
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 200 --stop_ix 250 --bsz 28
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 250 --stop_ix 300 --bsz 28
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 90 --stop_ix 95 --bsz 28
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 400 --stop_ix 450 --bsz 28
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 300 --stop_ix 350 --bsz 28
     # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 100 --stop_ix 105 --bsz 28
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 105 --stop_ix 110 --bsz 28
 
@@ -545,11 +547,11 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --start_ix 900 --stop_ix 950 
     # gauss node 2, 
     #   tmux attach -t adv21 , adv22, adv23, adv24, adv29
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 45 --stop_ix 50 --bsz 10
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 50 --stop_ix 55 --bsz 8
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 55 --stop_ix 60 
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 60 --stop_ix 65 
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 65 --stop_ix 70 --bsz 8
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 950 --stop_ix 1000 --bsz 10
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 0 --stop_ix 50 --bsz 8
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 50 --stop_ix 100 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 100 --stop_ix 150 
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 150 --stop_ix 200 --bsz 8
     # gauss node 3, (careful) 
     #   tmux attach -t adv1, adv2, adv6, adv7  (opt text! v2)
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 130 --stop_ix 1000 --bsz 10 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 200 --stop_ix 250 --bsz 10 
