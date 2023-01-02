@@ -516,21 +516,20 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # XXX LEAVE FOR TAI
-    # XXX LEAVE FOR TAI
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 200 --stop_ix 250 --bsz 28
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 250 --stop_ix 300 --bsz 28
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 90 --stop_ix 95 --bsz 28
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 300 --stop_ix 350 --bsz 28
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 100 --stop_ix 105 --bsz 28
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 105 --stop_ix 110 --bsz 28
-
+    # XXX LEAVE OPEN FOR TAI
+    # XXX LEAVE OPEN FOR TAI
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 360 --stop_ix 380 --bsz 28
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 380 --stop_ix 400 --bsz 28
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 400 --stop_ix 420 --bsz 28
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 420 --stop_ix 440 --bsz 28
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 0 --stop_ix 200 --bsz 28 --seed 2
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 200 --stop_ix 435 --bsz 28 --seed 2
 
     # Allegro (Osbert)
     #   tmux attach -t adv5 adv6, adv7  (now compression + tr better) 
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 110 --stop_ix 115 --bsz 28
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 115 --stop_ix 120 --bsz 28
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 125 --stop_ix 130 --bsz 28
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 300 --stop_ix 320 --bsz 28
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 320 --stop_ix 340 --bsz 28
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 340 --stop_ix 360 --bsz 28
 
     # gauss node 1,      conda activate adv_env   (no more exclusion at all, and down to 4 tokens instead of 6)
     #   tmux attach -t adv0, 1, 2, 3, ..., 8
@@ -552,6 +551,6 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 260 --stop_ix 280 --bsz 8
     # gauss node 3, (careful) 
     #   tmux attach -t adv1, adv2, adv6, adv7  (opt text! v2)
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 280 --stop_ix 300 --bsz 10 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 280 --stop_ix 300 --bsz 8
 
     # 433 total valid one word classes 

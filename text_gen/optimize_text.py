@@ -89,7 +89,6 @@ class OptimizeText(RunTurbo):
             target_string=self.args.target_string,
         )
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
     parser.add_argument('--work_dir', default='/home/nmaus/' ) 
@@ -126,10 +125,12 @@ if __name__ == "__main__":
     parser.add_argument('--single_number_per_token', type=bool, default=False )
     parser.add_argument('--additive_gp', type=bool, default=False)  
     parser.add_argument('--text_gen_model', default="opt" )  
-    parser.add_argument('--loss_type', default="perc_target" ) # log_prob_neg, log_prob_pos, perc_target
+    parser.add_argument('--loss_type', default="target_occurances" ) # log_prob_neg, log_prob_pos, perc_target, num_target, "target_occurances"
     parser.add_argument('--target_string', default="cat" ) # log_prob_neg, log_prob_pos
     args = parser.parse_args() 
     assert args.text_gen_model in ["gpt2", "opt"] 
+    if args.loss_type == "target_occurances":
+        assert len(args.target_string) == 1
 
     runner = OptimizeText(args)
     runner.optimize() 

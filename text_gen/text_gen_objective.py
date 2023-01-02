@@ -155,26 +155,37 @@ class AdversarialsTextGenObjective(Objective):
             else:
                 raise ValueError(f"loss_type must be one of ['log_prob_pos', 'log_prob_neg'] but was {self.loss_type}")
             loss = loss.reshape(num_prompts, -1) 
-        elif self.loss_type == "perc_target": # else: # if self.loss_type == 'perc_ts':
+        elif self.loss_type in ["perc_target", "num_target"]: # else: # if self.loss_type == 'perc_ts':
             n_input = self.n_tokens + self.N_extra_prepend_tokens  
             losses = []
             for outputs in text:
                 scores_for_prompt = []
                 for output in outputs:
-                    score = 0.0 
-                    total = 0.0 
+                    words_with_target = 0.0 
+                    total_words = 0.0 
+                    occurances = 0.0 
                     for word in output.split()[n_input:]:
                         if self.target_string in word:
-                            score += 1 
-                        total += 1
-                    if total > 0:
-                        score = score/total 
-                    else:
-                        score = 0.0 
+                            words_with_target += 1.0 
+                            for char in word:
+                                if char == self.target_string:
+                                    occurances += 1.0 
+                        total_words += 1.0 
+                    if self.loss_type == "perc_target":
+                        if total_words > 0:
+                            score = words_with_target/total_words
+                        else:
+                            score = 0.0 
+                    elif self.loss_type == "num_target": # num words_with_target
+                        score = words_with_target
+                    elif self.loss_type == "target_occurances": # total number of chars
+                        score = occurances 
                     scores_for_prompt.append(score) 
                 scores_for_prompt = torch.tensor(scores_for_prompt).float() 
                 losses.append(scores_for_prompt.unsqueeze(0))
             loss = torch.cat(losses) 
+        else:
+            assert 0 
 
         return loss  # torch.Size([2, 5]) = torch.Size([bsz, N_avg_over])
         
