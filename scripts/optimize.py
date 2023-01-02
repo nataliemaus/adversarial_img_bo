@@ -74,6 +74,8 @@ class RunTurbo():
 
     def start_wandb(self):
         args_dict = vars(self.args) 
+        import pdb 
+        pdb.set_trace() 
         self.tracker = wandb.init(
             entity=args_dict['wandb_entity'], 
             project=args_dict['wandb_project_name'],
@@ -483,7 +485,7 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize_text.py --n_tokens 2 --bsz 28 --target_string cat
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 70 --stop_ix 75 --bsz 28
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 75 --stop_ix 80 --bsz 28 
     # CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --n_tokens 3 --bsz 28 --target_string cat
     # CUDA_VISIBLE_DEVICES=3 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string cat
@@ -497,8 +499,8 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 70 --stop_ix 75 --bsz 28
-    # XXX 
+    # XXX LEAVE FOR TAI
+    # XXX LEAVE FOR TAI
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 80 --stop_ix 85 --bsz 28
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 85 --stop_ix 90 --bsz 28
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 90 --stop_ix 95 --bsz 28
@@ -515,8 +517,8 @@ if __name__ == "__main__":
 
     # gauss node 1,      conda activate adv_env   (no more exclusion at all, and down to 4 tokens instead of 6)
     #   tmux attach -t adv0, 1, 2, 3, ..., 8
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 5 
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 5 --stop_ix 10 
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 140 --stop_ix 150 
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 150 --stop_ix 160 --bsz 8
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 10 --stop_ix 15 
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 15 --stop_ix 20 
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 20  --stop_ix 25 
