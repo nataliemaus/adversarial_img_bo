@@ -477,8 +477,6 @@ if __name__ == "__main__":
     parser.add_argument('--additive_gp', type=bool, default=False)  
     args = parser.parse_args() 
 
-    import pdb 
-    pdb.set_trace() 
     if args.optimal_class == "all":
         classes = load_valid_imagenet_classes()
         for clas in classes[args.start_ix:args.stop_ix]:
@@ -536,22 +534,24 @@ if __name__ == "__main__":
 
     # gauss node 1,      conda activate adv_env   (no more exclusion at all, and down to 4 tokens instead of 6)
     #   tmux attach -t adv0, 1, 2, 3, ..., 8
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 400 --stop_ix 450 
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 450 --stop_ix 500 
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 500 --stop_ix 550 
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 550 --stop_ix 600 
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 600  --stop_ix 750 
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 750 --stop_ix 800 
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 800 --stop_ix 850 
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 850 --stop_ix 900 
-    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --start_ix 900 --stop_ix 950 
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 0 --stop_ix 20 
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 20 --stop_ix 40 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 40 --stop_ix 60
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 60 --stop_ix 80 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 80  --stop_ix 100 
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 100 --stop_ix 120 
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 120 --stop_ix 140 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 140 --stop_ix 160 
+    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --start_ix 160 --stop_ix 180 
     # gauss node 2, 
     #   tmux attach -t adv21 , adv22, adv23, adv24, adv29
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 950 --stop_ix 1000 --bsz 10
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 0 --stop_ix 50 --bsz 8
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 50 --stop_ix 100 
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 100 --stop_ix 150 
-    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 150 --stop_ix 200 --bsz 8
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 180 --stop_ix 200 --bsz 10
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 200 --stop_ix 220 --bsz 8
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 220 --stop_ix 240 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 240 --stop_ix 260 
+    # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 260 --stop_ix 280 --bsz 8
     # gauss node 3, (careful) 
     #   tmux attach -t adv1, adv2, adv6, adv7  (opt text! v2)
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 200 --stop_ix 250 --bsz 10 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 280 --stop_ix 300 --bsz 10 
+
+    # 433 total valid one word classes 
