@@ -81,6 +81,23 @@ class RunTurbo():
         ) 
         print('running', wandb.run.name) 
 
+    def set_seed(self):
+        # The flag below controls whether to allow TF32 on matmul. This flag defaults to False
+        # in PyTorch 1.12 and later.
+        torch.backends.cuda.matmul.allow_tf32 = False
+        # The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
+        torch.backends.cudnn.allow_tf32 = False
+        seed = self.args.seed  
+        if seed is not None:
+            torch.manual_seed(seed) 
+            random.seed(seed)
+            np.random.seed(seed)
+            torch.cuda.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+            torch.backends.cudnn.benchmark = False
+            torch.backends.cudnn.deterministic = True
+            os.environ["PYTHONHASHSEED"] = str(seed)
+
     def update_surr_model(
         self,
         model,
@@ -325,6 +342,7 @@ class RunTurbo():
         )
 
     def optimize(self):
+        self.set_seed()
         self.init_args()  
         self.start_wandb() # initialized self.tracker
         self.init_objective() 
@@ -515,15 +533,15 @@ if __name__ == "__main__":
 
     # gauss node 1,      conda activate adv_env   (no more exclusion at all, and down to 4 tokens instead of 6)
     #   tmux attach -t adv0, 1, 2, 3, ..., 8
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 140 --stop_ix 150 
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 150 --stop_ix 160 --bsz 8
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 10 --stop_ix 15 
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 15 --stop_ix 20 
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 20  --stop_ix 25 
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 25 --stop_ix 30 
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 30 --stop_ix 35 
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 35 --stop_ix 40 
-    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --start_ix 40 --stop_ix 45  
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --start_ix 400 --stop_ix 450 
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 450 --stop_ix 500 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 500 --stop_ix 550 
+    # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 550 --stop_ix 600 
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 600  --stop_ix 750 
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 750 --stop_ix 800 
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 800 --stop_ix 850 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 850 --stop_ix 900 
+    # CUDA_VISIBLE_DEVICES=8 python3 optimize.py --start_ix 900 --stop_ix 950 
     # gauss node 2, 
     #   tmux attach -t adv21 , adv22, adv23, adv24, adv29
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --start_ix 45 --stop_ix 50 --bsz 10
