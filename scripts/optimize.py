@@ -3,6 +3,7 @@ import torch
 import gpytorch
 import numpy as np 
 import sys 
+import copy 
 sys.path.append("../") 
 from gpytorch.mlls import PredictiveLogLikelihood 
 from utils.bo_utils.trust_region import (
@@ -309,7 +310,8 @@ class RunTurbo():
         self.args.update_state_fix2 = True 
         self.args.update_state_fix3 = True 
         self.args.record_most_probable_fix2 = True 
-        self.args.flag_set_seed = True 
+        self.args.flag_set_seed = True
+        self.args.flag_fix_args_reset = True  
         if self.args.n_init_pts is None:
             self.args.n_init_pts = self.args.bsz * self.args.n_init_per_prompt
         assert self.args.n_init_pts % self.args.bsz == 0
@@ -382,7 +384,7 @@ class RunTurbo():
                 self.save_stuff()
             if self.args.break_after_success and (prev_best > self.best_baseline_score): 
                 # only give n_addtional_evals more calls 
-                self.args.max_n_calls = self.args.objective.num_calls + self.args.n_addtional_evals 
+                self.args.max_n_calls = min(self.args.objective.num_calls + self.args.n_addtional_evals, self.args.max_n_calls)
                 self.args.break_after_success = False 
                 self.tracker.log({"beat_best_baseline":True})
             x_next = generate_batch( 
@@ -453,8 +455,8 @@ if __name__ == "__main__":
     parser.add_argument('--break_after_success', type=bool, default=True )
     parser.add_argument('--success_value', default="beat_baseline" ) # type=int, default=-1)  
     # maybe later 
-    parser.add_argument('--max_n_calls', type=int, default=20_000) 
-    parser.add_argument('--n_addtional_evals', type=int, default=3_000) 
+    parser.add_argument('--max_n_calls', type=int, default=5_000) 
+    parser.add_argument('--n_addtional_evals', type=int, default=1_000) 
     parser.add_argument('--compression_version', type=int, default=2) # 2 == "laced-snow-14" 
     ## bsz ...  
     parser.add_argument('--n_init_per_prompt', type=int, default=10 ) 
@@ -475,18 +477,19 @@ if __name__ == "__main__":
     parser.add_argument('--failure_tolerance', type=int, default=32 )  
     parser.add_argument('--success_tolerance', type=int, default=10 )  
     parser.add_argument('--additive_gp', type=bool, default=False)  
-    args = parser.parse_args() 
+    og_args = parser.parse_args() 
 
-    if args.optimal_class == "all":
+    if og_args.optimal_class == "all":
         classes = load_valid_imagenet_classes()
-        for clas in classes[args.start_ix:args.stop_ix]:
+        for clas in classes[og_args.start_ix:og_args.stop_ix]:
+            args = copy.deepcopy(og_args)
             args.optimal_class = clas 
             runner = RunTurbo(args) 
             runner.optimize() 
     else:
-        runner = RunTurbo(args) 
+        runner = RunTurbo(og_args) 
         runner.optimize() 
-    # pip install diffusers
+    # pip install diffusers 
     # pip install accelerate 
     #  conda activate lolbo_mols
     # tmux attach -t adv 
@@ -510,7 +513,6 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=5 python3 optimize_text.py --n_tokens 5 --bsz 28 --target_string t
     # CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --n_tokens 5 --bsz 28 --target_string q
     # CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --n_tokens 5 --bsz 28 --target_string z
-
 
     # ERIC MACHINE: ... ???   (ssh nmaus@deep-a6000x8-1.seas.upenn.edu )
     #   tmux attach -t adv0, adv1, adv2, adv3, ..., adv7
