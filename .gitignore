@@ -5,6 +5,7 @@ __pycache__/*
 *.png
 *.pt 
 *.csv
+!data/image_net_hierarcy.csv
 ae_models/*.pkl 
 !ae_models/devout-firebrand-15.pkl  
 !ae_models/laced-snow-14.pkl  

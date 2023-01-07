@@ -10,3 +10,8 @@ def get_synonyms(word):
         for lemma in syn.lemmas():
             synonyms = synonyms + lemma.name().split("_") 
     return synonyms
+
+if __name__ == "__main__":
+    import pdb 
+    pdb.set_trace() 
+    get_synonyms(word='spaniel') 

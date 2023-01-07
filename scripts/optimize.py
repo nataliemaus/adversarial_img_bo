@@ -21,6 +21,7 @@ from torch.utils.data import (
     TensorDataset, 
     DataLoader
 )
+from data.read_hierarchial_imagenet import load_imagenet_hierarcy_dicts
 from utils.adversarial_objective import AdversarialsObjective  
 import argparse 
 import wandb 
@@ -154,7 +155,6 @@ class RunTurbo():
     def get_baseline_prompts(self):
         prompts = [] # 5 example baseline prompts 
         obj_cls = self.args.objective.optimal_class 
-
         # "CLS CLS CLS CLS" 
         prompt1 = obj_cls 
         for i in range(self.args.n_tokens - 1):
@@ -312,6 +312,7 @@ class RunTurbo():
         self.args.record_most_probable_fix2 = True 
         self.args.flag_set_seed = True
         self.args.flag_fix_args_reset = True  
+        self.args.flag_reset_gp_new_data = True # reset gp every 10 iters up to 1024 data points 
         if self.args.n_init_pts is None:
             self.args.n_init_pts = self.args.bsz * self.args.n_init_per_prompt
         assert self.args.n_init_pts % self.args.bsz == 0
@@ -336,6 +337,8 @@ class RunTurbo():
             seed=self.args.seed,
             prepend_to_text=self.args.prepend_to_text,
             optimal_class=self.args.optimal_class,
+            optimal_class_level=self.args.optimal_class_level,# 1,
+            optimmal_sub_classes=self.args.optimmal_sub_classes, # [],
             visualize=False,
             compress_search_space=self.args.compress_search_space,
             single_number_per_token=self.args.single_number_per_token,
@@ -368,6 +371,7 @@ class RunTurbo():
             failure_tolerance=self.args.failure_tolerance,
             success_tolerance=self.args.success_tolerance,
         )
+        n_iters = 0
         while self.args.objective.num_calls < self.args.max_n_calls:
             self.tracker.log({
                 'num_calls':self.args.objective.num_calls,
@@ -416,6 +420,16 @@ class RunTurbo():
                     train_y=self.args.Y,
                     n_epochs=self.args.init_n_epochs
                 )
+            # flag_reset_gp_new_data 
+            elif (self.args.X.shape[0] < 1024) and (n_iters % 10 == 0): # reestart gp and update on all data 
+                model = self.initialize_global_surrogate_model(self.args.X, hidden_dims=self.args.hidden_dims) 
+                model = self.update_surr_model(
+                    model=model,
+                    learning_rte=self.args.lr,
+                    train_z=self.args.X,
+                    train_y=self.args.Y,
+                    n_epochs=self.args.init_n_epochs
+                )
             else:
                 model = self.update_surr_model(
                     model=model,
@@ -424,6 +438,7 @@ class RunTurbo():
                     train_y=y_next, 
                     n_epochs=self.args.n_epochs
                 )
+            n_iters += 1
         self.tracker.finish() 
 
 
@@ -456,7 +471,7 @@ if __name__ == "__main__":
     parser.add_argument('--success_value', default="beat_baseline" ) # type=int, default=-1)  
     # maybe later 
     parser.add_argument('--max_n_calls', type=int, default=5_000) 
-    parser.add_argument('--n_addtional_evals', type=int, default=1_000) 
+    parser.add_argument('--n_addtional_evals', type=int, default=2_000) 
     parser.add_argument('--compression_version', type=int, default=2) # 2 == "laced-snow-14" 
     ## bsz ...  
     parser.add_argument('--n_init_per_prompt', type=int, default=10 ) 
@@ -477,18 +492,29 @@ if __name__ == "__main__":
     parser.add_argument('--failure_tolerance', type=int, default=32 )  
     parser.add_argument('--success_tolerance', type=int, default=10 )  
     parser.add_argument('--additive_gp', type=bool, default=False)  
+    parser.add_argument('--optimal_class_level', type=int, default=1 )  
+    parser.add_argument('--optimmal_sub_classes', type=list, default=[])  
     og_args = parser.parse_args() 
 
-    if og_args.optimal_class == "all":
-        classes = load_valid_imagenet_classes()
+    if og_args.optimal_class != "all": # single class specified 
+        runner = RunTurbo(og_args) 
+        runner.optimize()
+    else: 
+        if og_args.optimal_class_level == 1:
+            classes = load_valid_imagenet_classes()
+        else:
+            l2_to_l1, l3_to_l1 = load_imagenet_hierarcy_dicts(work_dir=og_args.work_dir) 
+            d1 = l2_to_l1 
+            if og_args.optimal_class_level == 3: d1 = l3_to_l1 
+            classes = list(d1.keys())
         for clas in classes[og_args.start_ix:og_args.stop_ix]:
             args = copy.deepcopy(og_args)
             args.optimal_class = clas 
+            if og_args.optimal_class_level > 1:
+                args.optimmal_sub_classes = d1[clas]
             runner = RunTurbo(args) 
             runner.optimize() 
-    else:
-        runner = RunTurbo(og_args) 
-        runner.optimize() 
+
     # pip install diffusers 
     # pip install accelerate 
     #  conda activate lolbo_mols
@@ -505,14 +531,14 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # CUDA_VISIBLE_DEVICES=0 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string a
-    # CUDA_VISIBLE_DEVICES=1 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string t
-    # CUDA_VISIBLE_DEVICES=2 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string q
-    # CUDA_VISIBLE_DEVICES=3 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string z
-    # CUDA_VISIBLE_DEVICES=4 python3 optimize_text.py --n_tokens 5 --bsz 28 --target_string a
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize_text.py --n_tokens 5 --bsz 28 --target_string t
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize_text.py --n_tokens 5 --bsz 28 --target_string q
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize_text.py --n_tokens 5 --bsz 28 --target_string z
+    # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --optimal_class_level 2 --start_ix 0 --stop_ix 20 --bsz 28 
+    # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --optimal_class_level 2 --start_ix 20 --stop_ix 40 --bsz 28 
+    # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --optimal_class_level 2 --start_ix 40 --stop_ix 60 --bsz 28 
+    # ** a day or so ** CUDA_VISIBLE_DEVICES=3 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string z
+    # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --optimal_class_level 2 --start_ix 60 --stop_ix 80 --bsz 28 
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --optimal_class_level 2 --start_ix 80 --stop_ix 100 --bsz 28 
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --optimal_class_level 2 --start_ix 100 --stop_ix 120 --bsz 28 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --optimal_class_level 2 --start_ix 120 --stop_ix 145 --bsz 28 
 
     # ERIC MACHINE: ... ???   (ssh nmaus@deep-a6000x8-1.seas.upenn.edu )
     #   tmux attach -t adv0, adv1, adv2, adv3, ..., adv7
@@ -553,7 +579,7 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 240 --stop_ix 260 
     # CUDA_VISIBLE_DEVICES=9 python3 optimize.py --start_ix 260 --stop_ix 280 --bsz 8
     # gauss node 3, (careful) 
-    #   tmux attach -t adv1, adv2, adv6, adv7  (opt text! v2)
+    #   tmux attach -t adv4 
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 280 --stop_ix 300 --bsz 8
 
     # 433 total valid one word classes 

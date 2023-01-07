@@ -29,6 +29,8 @@ class AdversarialsObjective(Objective):
         compress_search_space=False,
         prepend_to_text="",
         optimal_class="cat",
+        optimal_class_level=1,
+        optimmal_sub_classes=[],
         seed=1,
         remove_synonyms=False,
         single_number_per_token=False,
@@ -47,6 +49,18 @@ class AdversarialsObjective(Objective):
         # CONSTANTS
         # if prepend_to_text is not "", we will prepend the adversairla prompt to the text
         # ie prepend_to_text = "a picture of a dog"
+        assert optimal_class_level in [1,2,3]
+        if optimal_class_level == 1:
+            optimmal_sub_classes = [optimal_class]
+        assert len(optimmal_sub_classes) > 0 
+        self.optimal_class_level = optimal_class_level
+        self.optimmal_sub_classes = optimmal_sub_classes
+        self.optimal_class_idxs = []
+        for cls in self.optimmal_sub_classes:
+            class_ix = self.imagenet_class_to_ix[cls] 
+            self.optimal_class_idxs.append(class_ix) 
+
+
         self.single_number_per_token = single_number_per_token
         self.prepend_to_text = prepend_to_text 
         self.remove_synonyms = remove_synonyms
@@ -134,11 +148,11 @@ class AdversarialsObjective(Objective):
             # if only exlucde some (optimal class name, optimal class name +s, 
             #   anything containg optimal class name)
             if self.remove_synonyms:
-                related_vocab = get_synonyms(self.optimal_class) + [self.optimal_class]
-                related_vocab_s = [word + "s" for word in related_vocab]
-                self.related_vocab = related_vocab + related_vocab_s 
+                self.related_vocab = get_synonyms(self.optimal_class) + [self.optimal_class] + self.optimmal_sub_classes
             else:
-                self.related_vocab = [self.optimal_class, self.optimal_class+"s"]
+                self.related_vocab = [self.optimal_class] + self.optimmal_sub_classes
+            related_vocab_s = [word + "s" for word in self.related_vocab]
+            self.related_vocab = self.related_vocab + related_vocab_s 
             if self.exclude_all_related_prompts: # cat, car or violin only prepped 
                 self.related_vocab = RELATED_VOCAB_DICT[self.optimal_class]
             self.all_token_idxs = self.get_non_related_values() 
@@ -172,6 +186,7 @@ class AdversarialsObjective(Objective):
         self.dim = self.n_tokens*self.search_space_dim
         self.imagenet_class_to_ix, self.ix_to_imagenet_class = load_imagenet()
 
+    ### 
     def get_non_related_values(self):
         tmp = [] 
         for word in self.related_vocab:
@@ -344,26 +359,30 @@ class AdversarialsObjective(Objective):
             output = self.resnet18(input_batch)
         # The output has unnormalized scores. To get probabilities, you can run a softmax on it.
         probabilities = torch.nn.functional.softmax(output, dim=1)
-        if self.optimal_class == "cat":
-            class_ix = 281
-        elif self.optimal_class == "violin":
-            class_ix = 889
-        elif self.optimal_class == "car": 
-            # 705, 706 = passenger car (but could be train passenger car too... idk, stick w/ sports car!)
-            # 817, 818 = sports car !!! 
-            class_ix = 817
-        else:
-            class_ix = self.imagenet_class_to_ix[self.optimal_class] 
+        # if self.optimal_class == "cat":
+        #     class_ix = 281
+        # elif self.optimal_class == "violin":
+        #     class_ix = 889
+        # elif self.optimal_class == "car": 
+        #     # 705, 706 = passenger car (but could be train passenger car too... idk, stick w/ sports car!)
+        #     # 817, 818 = sports car !!! 
+        #     class_ix = 817
+        # else:
+        #    class_ix = self.imagenet_class_to_ix[self.optimal_class] 
+
+        # self.optimal_class_level = optimal_class_level
+        # self.optimmal_sub_classes = optimmal_sub_classes
+
         # probabilities.shape = (bsz,1000) = (bsz,n_imagenet_classes) 
         most_probable_classes = torch.argmax(probabilities, dim=-1) # (bsz,)
         self.most_probable_classes_batch = [self.ix_to_imagenet_class[ix.item()] for ix in most_probable_classes]
-        total_probs = torch.max(probabilities[:,class_ix:class_ix+1], dim = 1).values # classes 281:282 are HOUSE cat classes
+        # prob of max prob class of all optimal class options! 
+        total_probs = torch.max(probabilities[:,self.optimal_class_idxs], dim=1).values # classes 281:282 are HOUSE cat classes
         # total_cat_probs = torch.max(probabilities[:,281:286], dim = 1).values # classes 281:286 are cat classes
         #total_dog_probs = torch.sum(probabilities[:,151:268], dim = 1) # classes 151:268 are dog classes
         #p_dog = total_dog_probs / (total_cat_sprobs + total_dog_probs)
         loss = - torch.log(total_probs)
         return loss
-
 
 
     '''
@@ -469,10 +488,11 @@ class AdversarialsObjective(Objective):
             for i in range(self.batch_size):
                 most_likely_cls_form_xi = []
                 for clss_for_latent in most_likely_classes_per_latent:
-                    most_likely_cls_form_xi.append(clss_for_latent[i])
+                    most_likely_cls_form_xi.append(clss_for_latent[i]) 
                 mode_most_likely_class = max(set(most_likely_cls_form_xi), key=most_likely_cls_form_xi.count)
-                self.most_probable_classes.append(mode_most_likely_class) 
-                prcnt_correct_class = (np.array(most_likely_cls_form_xi) == self.optimal_class).sum() / len(most_likely_cls_form_xi)
+                self.most_probable_classes.append(mode_most_likely_class) # in self.optimmal_sub_classes 
+                prcnt_correct_class = [clas in self.optimmal_sub_classes for clas in most_likely_cls_form_xi]
+                prcnt_correct_class = np.array(prcnt_correct_class).sum() / len(most_likely_cls_form_xi)
                 self.prcnts_correct_class.append(prcnt_correct_class) # % of latents --> correct class 
             if return_img:
                 imgs = [] # bsz x N latents: [ [latent 0, latent 1, ...], [latent 0, latent 1, ...],, ..., [latent 0, latent 1, ...],]
@@ -488,8 +508,9 @@ class AdversarialsObjective(Objective):
                 output_types=out_types,
                 fixed_latents=self.fixed_latents
             )
-            self.most_probable_classes = self.most_probable_classes_batch
-            self.prcnts_correct_class = (np.array(self.most_probable_classes_batch) == self.optimal_class).tolist()
+            self.most_probable_classes = self.most_probable_classes_batch 
+            self.prcnts_correct_class = [clas in self.optimmal_sub_classes for clas in self.most_probable_classes_batch]
+            # self.prcnts_correct_class = (np.array(self.most_probable_classes_batch) == self.optimal_class).tolist()
             y = out_dict['loss'] 
             if return_img:
                 imgs = out_dict["image"] 
