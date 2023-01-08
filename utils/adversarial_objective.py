@@ -184,7 +184,6 @@ class AdversarialsObjective(Objective):
             class_ix = self.imagenet_class_to_ix[cls] 
             self.optimal_class_idxs.append(class_ix) 
 
-    ### 
     def get_non_related_values(self):
         tmp = [] 
         for word in self.related_vocab:

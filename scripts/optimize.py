@@ -553,6 +553,9 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 420 --stop_ix 440 --bsz 28
     # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 0 --stop_ix 200 --bsz 28 --seed 2
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 200 --stop_ix 435 --bsz 28 --seed 2
+    # XXX *** CHANGEE SEED 2s to ... --> ... 
+    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --optimal_class_level 3 --start_ix 0 --stop_ix 13 --bsz 28 
+    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --optimal_class_level 3 --start_ix 13 --stop_ix 30 --bsz 28 
 
     # Allegro (Osbert)
     #   tmux attach -t adv5 adv6, adv7  (now compression + tr better) 
