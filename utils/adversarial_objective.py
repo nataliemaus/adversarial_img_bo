@@ -55,12 +55,6 @@ class AdversarialsObjective(Objective):
         assert len(optimmal_sub_classes) > 0 
         self.optimal_class_level = optimal_class_level
         self.optimmal_sub_classes = optimmal_sub_classes
-        self.optimal_class_idxs = []
-        for cls in self.optimmal_sub_classes:
-            class_ix = self.imagenet_class_to_ix[cls] 
-            self.optimal_class_idxs.append(class_ix) 
-
-
         self.single_number_per_token = single_number_per_token
         self.prepend_to_text = prepend_to_text 
         self.remove_synonyms = remove_synonyms
@@ -185,6 +179,10 @@ class AdversarialsObjective(Objective):
             self.search_space_dim = 768 # dim per token 
         self.dim = self.n_tokens*self.search_space_dim
         self.imagenet_class_to_ix, self.ix_to_imagenet_class = load_imagenet()
+        self.optimal_class_idxs = []
+        for cls in self.optimmal_sub_classes:
+            class_ix = self.imagenet_class_to_ix[cls] 
+            self.optimal_class_idxs.append(class_ix) 
 
     ### 
     def get_non_related_values(self):

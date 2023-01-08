@@ -545,8 +545,8 @@ if __name__ == "__main__":
     #   dockerd-rootless-setuptool.sh install
     #   systemctl --user start docker
     #   docker run -v /home1/n/nmaus/adversarial_img_bo/:/workspace/ --gpus all -it nmaus/advenv
-    # XXX LEAVE OPEN FOR TAI
-    # XXX LEAVE OPEN FOR TAI
+    # XXX LEAVE OPEN FOR TAI (CUDA_VISIBLE_DEVICES=0)
+    # XXX LEAVE OPEN FOR TAI (CUDA_VISIBLE_DEVICES=1)
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --start_ix 360 --stop_ix 380 --bsz 28
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 380 --stop_ix 400 --bsz 28
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 400 --stop_ix 420 --bsz 28
