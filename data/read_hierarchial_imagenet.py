@@ -1,7 +1,8 @@
 # Imagenet classes hierarcy 
 # https://observablehq.com/@mbostock/imagenet-hierarchy
 def load_imagenet_hierarcy_dicts(work_dir="/home/nmaus/"):
-    path = work_dir + "adversarial_img_bo/data/image_net_hierarcy.csv"
+    # path = work_dir + "adversarial_img_bo/data/image_net_hierarcy.csv"
+    path = "../data/image_net_hierarcy.csv"
     f = open(path, "r") 
     l2_to_l1 = {} # 142 
     l3_to_l2 = {} 
