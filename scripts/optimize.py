@@ -536,7 +536,7 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --optimal_class_level 2 --start_ix 40 --stop_ix 60 --bsz 28 
     # ** a day or so ** CUDA_VISIBLE_DEVICES=3 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string z
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --optimal_class_level 2 --start_ix 60 --stop_ix 80 --bsz 28 
-    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --optimal_class_level 2 --start_ix 80 --stop_ix 100 --bsz 28 
+    # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --optimal_class_level 2 --start_ix 80 --stop_ix 100 --bsz 25 
     # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --optimal_class_level 2 --start_ix 100 --stop_ix 120 --bsz 28 
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --optimal_class_level 2 --start_ix 120 --stop_ix 145 --bsz 28 
 
@@ -551,9 +551,8 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=3 python3 optimize.py --start_ix 380 --stop_ix 400 --bsz 28
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --start_ix 400 --stop_ix 420 --bsz 28
     # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --start_ix 420 --stop_ix 440 --bsz 28
-    # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 0 --stop_ix 200 --bsz 28 --seed 2
-    # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 200 --stop_ix 435 --bsz 28 --seed 2
-    # XXX *** CHANGEE SEED 2s to ... --> ... 
+    # XXX CUDA_VISIBLE_DEVICES=6 python3 optimize.py --start_ix 0 --stop_ix 200 --bsz 28 --seed 2
+    # XXX CUDA_VISIBLE_DEVICES=7 python3 optimize.py --start_ix 200 --stop_ix 435 --bsz 28 --seed 2
     # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --optimal_class_level 3 --start_ix 0 --stop_ix 13 --bsz 28 
     # CUDA_VISIBLE_DEVICES=7 python3 optimize.py --optimal_class_level 3 --start_ix 13 --stop_ix 30 --bsz 28 
 

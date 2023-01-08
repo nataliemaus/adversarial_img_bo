@@ -24,7 +24,7 @@ level, level class, lowever level subclasses
 2, seal, sea lion
 2, sea-cow, dugong
 3, aquatic-mammal, whale, seal, sea-cow 
-2, great-ape, chimpanzeee, gorilla, orangutan
+2, great-ape, chimpanzee, gorilla, orangutan
 2, lesser-ape, gibbon, siamang
 2, New-World-monkey, titi, squirrel monkey, spider monkey, marmoset, howler monkey, capuchin
 2, Old-World-monkey, proboscis monkey, patas, macaque, langur, guenon, colobus, baboon
@@ -34,17 +34,17 @@ level, level class, lowever level subclasses
 3, lagomorph, leporid
 2, rodent, fox squirrel, guinea pig, beaver, porcupine, marmot, hamster
 3, rodent, rodent
-2, sloth, three-toed sloth, 
+2, sloth, three-toed sloth
 2, armadillo, armadillo
 3, edentate, sloth, armadillo
 2, elephant, Indian elephant, African elephant, tusker 
 3, pachyderm, elephant
-2, bony-fish, goldfish, trench, eel, rock beauty, anemone fish, lionfish, puffer, gar, sturgeon 
+2, bony-fish, goldfish, eel, rock beauty, anemone fish, lionfish, puffer, gar, sturgeon 
 2, shark, great white shark, tiger shark, hammerhead
 2, ray, stingray, electric ray
 2, food-fish, barracouta, coho 
 3, fish, bony-fish, shark, ray, food-fish 
-2, aquatic-bird, red-breasted merganser, drake, goose, spoonbill, limpkin, flamingo, crane, bustard, white stork, black stork, American coot, little blue heron, bittern, American egret, oystercatcher, dowitcher, redshank, red-backed sandpiper, ruddy turnstone, king penguin, albatross, pelican, gallinule, black swan
+2, aquatic-bird, red-breasted merganser, drake, goose, spoonbill, limpkin, flamingo, crane, bustard, white stork, black stork, American coot, little blue heron, bittern, American egret, oystercatcher, dowitcher, redshank, red-backed sandpiper, ruddy turnstone, king penguin, albatross, pelican, European gallinule, black swan
 2, game-bird, peacock, partridge, quail, black grouse, prairie chicken, ptarmigan, ruffed grouse
 2, oscine, indigo bunting, junco, house finch, goldfinch, brambling, bulbul, robin, magpie, jay, chickadee, water ouzel
 2, bird-of-prey, vulture, great grey owl, kite, bald eagle
@@ -62,7 +62,7 @@ level, level class, lowever level subclasses
 2, crocodilian, American alligator, African crocodile
 2, turtle, loggerhead, leatherback turtle, terrapin, mud turtle, box turtle
 3, reptile, dinosaur, snake, lizard, crocodilian, turtle
-2, frog, bullfrong, tailed frog, tree frog 
+2, frog, bullfrog, tailed frog, tree frog 
 2, salamander, spotted salamander, axolotl, eft, common newt, European fire salamander
 3, amphibian, frog, salamander 
 2, crustacean, American lobster, spiny lobster, rock crab, king crab, fiddler crab, Dungeness crab, hermit crab, crayfish, isopod
