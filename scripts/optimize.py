@@ -534,7 +534,7 @@ if __name__ == "__main__":
     # CUDA_VISIBLE_DEVICES=0 python3 optimize.py --optimal_class_level 2 --start_ix 0 --stop_ix 20 --bsz 28 
     # CUDA_VISIBLE_DEVICES=1 python3 optimize.py --optimal_class_level 2 --start_ix 20 --stop_ix 40 --bsz 28 
     # CUDA_VISIBLE_DEVICES=2 python3 optimize.py --optimal_class_level 2 --start_ix 40 --stop_ix 60 --bsz 28 
-    # ** a day or so ** CUDA_VISIBLE_DEVICES=3 python3 optimize_text.py --n_tokens 4 --bsz 28 --target_string z
+    # ** CUDA_VISIBLE_DEVICES=3 python3 optimize.py --optimal_class_level 3 --start_ix 0 --stop_ix 100 --bsz 28 --exclude_some_related_prompts True  
     # CUDA_VISIBLE_DEVICES=4 python3 optimize.py --optimal_class_level 2 --start_ix 60 --stop_ix 80 --bsz 28 
     # CUDA_VISIBLE_DEVICES=5 python3 optimize.py --optimal_class_level 2 --start_ix 80 --stop_ix 100 --bsz 25 
     # CUDA_VISIBLE_DEVICES=6 python3 optimize.py --optimal_class_level 2 --start_ix 100 --stop_ix 120 --bsz 28 
